@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title></title>
+  </head>
+  <body>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/1.6.0/socket.io.min.js" charset="utf-8"></script>
+    <script type="text/javascript">
+      const client = io('http://localhost:5000')
+      client.on('my:id', console.log)
+      client.emit('ready')
+    </script>
+  </body>
+</html>
