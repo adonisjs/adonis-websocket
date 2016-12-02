@@ -1,5 +1,5 @@
 {
-  "name": "adonis-websockets",
+  "name": "adonis-websocket",
   "version": "1.0.0",
   "description": "Adonisjs websockets support",
   "main": "index.js",
