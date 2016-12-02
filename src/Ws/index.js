@@ -18,27 +18,47 @@ class Ws {
   constructor (Config, Request, Server) {
     this.config = Config.get('ws', defaultConfig)
     this.io = this.config.useHttpServer ? socketio(Server.getInstance()) : null
-    this.redisClient = null
+    this._channelsPool = {}
     this.Request = Request
-    this._configureAdapter()
   }
 
-  _configureAdapter () {
-    if (this.config.adapter && this.config.adapter === 'redis' && this.io) {
-      this.redisClient = require('socket.io-redis')(this.config.redis)
-      this.redisClient.pubClient.on('error', console.log)
-      this.redisClient.subClient.on('error', console.log)
-      this.io.adapter(this.redisClient)
-    }
-  }
-
+  /**
+   * Returns a new/existing channel instance for
+   * a given namespace.
+   *
+   * @param {String} name
+   * @param {Function|Class} closure
+   *
+   * @return {Object} channelInstance
+   *
+   * @throws {Error} when trying to access a non-existing channel
+   */
   channel (name, closure) {
-    return new Channel(this.io, this.Request, name, closure)
+    /**
+     * Behave as a getter when closure is not defined.
+     * Also make sure to throw exception when channel
+     * has not been creating previously.
+     */
+    if (!closure) {
+      const channel = this._channelsPool[name]
+      if (!channel) {
+        throw new Error(`Cannot find ${name} channel`)
+      }
+      return channel
+    }
+
+    this._channelsPool[name] = this._channelsPool[name] || new Channel(this.io, this.Request, name, closure)
+    return this._channelsPool[name]
   }
 
+  /**
+   * Attach a custom http server. Make sure to call
+   * attach before creating channels.
+   *
+   * @param {Object} server
+   */
   attach (server) {
     this.io = socketio(server)
-    this._configureAdapter()
   }
 
 }

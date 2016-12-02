@@ -58,6 +58,17 @@ describe('Channel', function () {
     client = wsClient.connect(socketUrl, options)
   })
 
+  it('should throw exception when disconnected is not a function', function () {
+    const server = http.createServer(function () {})
+    const io = socketio(server)
+    try {
+      const channel = new Channel(io, Request, '/', function () {}).disconnected()
+      assert.equal(channel, undefined)
+    } catch (e) {
+      assert.equal(e.message, 'Make sure to pass a function for disconnected event')
+    }
+  })
+
   it('should call the disconnect callback when client disconnects', function (done) {
     const server = http.createServer(function () {})
     const io = socketio(server)
@@ -518,7 +529,7 @@ describe('Channel', function () {
     let client = null
     client = wsClient.connect(socketUrl, options)
     client.on('connect', function () {
-      assert.equal(channel.get(client.id).constructor.name, 'AdonisSocket')
+      assert.equal(channel.get(client.id).socket.constructor.name, 'AdonisSocket')
       server.close(done)
       client.disconnect()
     })
@@ -565,5 +576,508 @@ describe('Channel', function () {
 
     let client = null
     client = wsClient.connect(`${socketUrl}/foo`, options)
+  })
+
+  it('should invoke the onJoin method when a client emits join event', function (done) {
+    const server = http.createServer(function (req, res) {})
+
+    const io = socketio(server)
+    const channel = new Channel(io, Request, '/', function () {})
+    channel.joinRoom(function (socket, room, body) {
+      assert.equal(room, 'lobby')
+      assert.equal(socket.id, body.id)
+      setTimeout(function () {
+        assert.equal(socket.rooms.lobby, 'lobby')
+        server.close(done)
+        client.disconnect()
+      })
+    })
+
+    server.listen(5000)
+
+    let client = null
+    client = wsClient.connect(socketUrl, options)
+    client.on('connect', function () {
+      client.emit('join:ad:room', {room: 'lobby', body: {id: client.id}})
+    })
+  })
+
+  it('should throw exception when joinRoom is not a function', function () {
+    const server = http.createServer(function (req, res) {})
+    const io = socketio(server)
+    try {
+      const channel = new Channel(io, Request, '/', function () {})
+      channel.joinRoom()
+    } catch (e) {
+      assert.equal(e.message, 'Make sure to pass a function for joinRoom event')
+    }
+  })
+
+  it('should invoke the onJoin generator method when a client emits join event', function (done) {
+    const server = http.createServer(function (req, res) {})
+
+    const io = socketio(server)
+    const channel = new Channel(io, Request, '/', function () {})
+    channel.joinRoom(function * (socket, room, body) {
+      assert.equal(room, 'lobby')
+      assert.equal(socket.id, body.id)
+      setTimeout(function () {
+        assert.equal(socket.rooms.lobby, 'lobby')
+        server.close(done)
+        client.disconnect()
+      })
+    })
+
+    server.listen(5000)
+
+    let client = null
+    client = wsClient.connect(socketUrl, options)
+    client.on('connect', function () {
+      client.emit('join:ad:room', {room: 'lobby', body: {id: client.id}})
+    })
+  })
+
+  it('should invoke client join event fn when able to join to a room', function (done) {
+    const server = http.createServer(function (req, res) {})
+
+    const io = socketio(server)
+    new Channel(io, Request, '/', function () {})
+
+    server.listen(5000)
+
+    let client = null
+    client = wsClient.connect(socketUrl, options)
+    client.on('connect', function () {
+      const fn = function (err, joined) {
+        assert.equal(err, null)
+        assert.equal(joined, true)
+        server.close(done)
+        client.disconnect()
+      }
+      client.emit('join:ad:room', {room: 'lobby', body: {}}, fn)
+    })
+  })
+
+  it('should invoke the join fn with the error thrown inside the onJoin function', function (done) {
+    const server = http.createServer(function (req, res) {})
+
+    const io = socketio(server)
+    const channel = new Channel(io, Request, '/', function () {})
+    channel.joinRoom(() => {
+      throw new Error('Cannot make you join the room')
+    })
+
+    server.listen(5000)
+
+    let client = null
+    client = wsClient.connect(socketUrl, options)
+    client.on('connect', function () {
+      const fn = function (err) {
+        assert.equal(err, 'Cannot make you join the room')
+        server.close(done)
+        client.disconnect()
+      }
+      client.emit('join:ad:room', {room: 'lobby', body: {}}, fn)
+    })
+  })
+
+  it('should invoke the join fn with the error thrown inside the onJoin generator function', function (done) {
+    const server = http.createServer(function (req, res) {})
+
+    const io = socketio(server)
+    const channel = new Channel(io, Request, '/', function () {})
+    channel.joinRoom(function * () {
+      throw new Error('Cannot make you join the room')
+    })
+
+    server.listen(5000)
+
+    let client = null
+    client = wsClient.connect(socketUrl, options)
+    client.on('connect', function () {
+      const fn = function (err) {
+        assert.equal(err, 'Cannot make you join the room')
+        server.close(done)
+        client.disconnect()
+      }
+      client.emit('join:ad:room', {room: 'lobby', body: {}}, fn)
+    })
+  })
+
+  it('should invoke the onLeave method when a client emits the leave event', function (done) {
+    const server = http.createServer(function (req, res) {})
+
+    const io = socketio(server)
+    const channel = new Channel(io, Request, '/', function () {})
+    channel.leaveRoom(function (socket, room, body) {
+      assert.equal(room, 'lobby')
+      assert.equal(socket.id, body.id)
+      assert.equal(socket.rooms.lobby, 'lobby')
+      setTimeout(function () {
+        assert.equal(socket.rooms.lobby, undefined)
+        server.close(done)
+        client.disconnect()
+      })
+    })
+
+    server.listen(5000)
+
+    let client = null
+    client = wsClient.connect(socketUrl, options)
+    client.on('connect', function () {
+      client.emit('join:ad:room', {room: 'lobby', body: {}}, function () {
+        client.emit('leave:ad:room', {room: 'lobby', body: {id: client.id}})
+      })
+    })
+  })
+
+  it('should call leaveRoom generator method when a client leaves a room', function (done) {
+    const server = http.createServer(function (req, res) {})
+
+    const io = socketio(server)
+    const channel = new Channel(io, Request, '/', function () {})
+    channel.leaveRoom(function * (socket, room, body) {
+      assert.equal(room, 'lobby')
+      assert.equal(socket.id, body.id)
+      assert.equal(socket.rooms.lobby, 'lobby')
+      setTimeout(function () {
+        assert.equal(socket.rooms.lobby, undefined)
+        server.close(done)
+        client.disconnect()
+      })
+    })
+
+    server.listen(5000)
+
+    let client = null
+    client = wsClient.connect(socketUrl, options)
+    client.on('connect', function () {
+      client.emit('join:ad:room', {room: 'lobby', body: {}}, function () {
+        client.emit('leave:ad:room', {room: 'lobby', body: {id: client.id}})
+      })
+    })
+  })
+
+  it('should call leaveRoom fn method with the error when an error is thrown', function (done) {
+    const server = http.createServer(function (req, res) {})
+
+    const io = socketio(server)
+    const channel = new Channel(io, Request, '/', function () {})
+    channel.leaveRoom(function * (socket, room, body) {
+      assert.equal(socket.rooms.lobby, 'lobby')
+      throw new Error('Cannot leave room')
+    })
+
+    server.listen(5000)
+
+    let client = null
+    client = wsClient.connect(socketUrl, options)
+    client.on('connect', function () {
+      client.emit('join:ad:room', {room: 'lobby', body: {}}, function () {
+        client.emit('leave:ad:room', {room: 'lobby', body: {id: client.id}}, function (error) {
+          assert.equal(error, 'Cannot leave room')
+          assert.equal(channel.get(client.id).socket.rooms.lobby, 'lobby')
+          server.close(done)
+          client.disconnect()
+        })
+      })
+    })
+  })
+
+  it('should throw exception when leaveRoom is not a function', function () {
+    const server = http.createServer(function (req, res) {})
+    const io = socketio(server)
+    try {
+      const channel = new Channel(io, Request, '/', function () {})
+      channel.leaveRoom()
+    } catch (e) {
+      assert.equal(e.message, 'Make sure to pass a function for leaveRoom event')
+    }
+  })
+
+  it('should invoke the onJoin method defined on the class prototype', function (done) {
+    const server = http.createServer(function (req, res) {})
+
+    const io = socketio(server)
+    class ChannelController {
+      joinRoom (socket, room, body) {
+        assert.equal(room, 'lobby')
+        assert.equal(socket.id, body.id)
+        setTimeout(function () {
+          assert.equal(socket.rooms.lobby, 'lobby')
+          server.close(done)
+          client.disconnect()
+        })
+      }
+    }
+    new Channel(io, Request, '/', ChannelController)
+    server.listen(5000)
+
+    let client = null
+    client = wsClient.connect(socketUrl, options)
+    client.on('connect', function () {
+      client.emit('join:ad:room', {room: 'lobby', body: {id: client.id}})
+    })
+  })
+
+  it('should invoke the onJoin generator method defined on the class prototype', function (done) {
+    const server = http.createServer(function (req, res) {})
+
+    const io = socketio(server)
+    class ChannelController {
+      * joinRoom (socket, room, body) {
+        assert.equal(room, 'lobby')
+        assert.equal(socket.id, body.id)
+        setTimeout(function () {
+          assert.equal(socket.rooms.lobby, 'lobby')
+          server.close(done)
+          client.disconnect()
+        })
+      }
+    }
+    new Channel(io, Request, '/', ChannelController)
+    server.listen(5000)
+
+    let client = null
+    client = wsClient.connect(socketUrl, options)
+    client.on('connect', function () {
+      client.emit('join:ad:room', {room: 'lobby', body: {id: client.id}})
+    })
+  })
+
+  it('should invoke the onLeave method on class instance when a client emits the leave event', function (done) {
+    const server = http.createServer(function (req, res) {})
+
+    const io = socketio(server)
+
+    class ChannelController {
+      leaveRoom (socket, room, body) {
+        assert.equal(room, 'lobby')
+        assert.equal(socket.id, body.id)
+        assert.equal(socket.rooms.lobby, 'lobby')
+        setTimeout(function () {
+          assert.equal(socket.rooms.lobby, undefined)
+          server.close(done)
+          client.disconnect()
+        })
+      }
+    }
+
+    new Channel(io, Request, '/', ChannelController)
+    server.listen(5000)
+
+    let client = null
+    client = wsClient.connect(socketUrl, options)
+    client.on('connect', function () {
+      client.emit('join:ad:room', {room: 'lobby', body: {}}, function () {
+        client.emit('leave:ad:room', {room: 'lobby', body: {id: client.id}})
+      })
+    })
+  })
+
+  it('socket client should recieve the message when a message is broadcasted to a room', function (done) {
+    const server = http.createServer(function (req, res) {})
+    const io = socketio(server)
+    let grettingReceivedCounts = 0
+    let disconnectCount = 0
+
+    class ChannelController {
+      constructor (socket) {
+        this.socket = socket
+      }
+
+      onReady () {
+        this.socket.inRoom('lobby').emit('greeting', 'Hello world')
+      }
+
+      disconnected () {
+        disconnectCount++
+        if (disconnectCount === 2) {
+          assert.equal(grettingReceivedCounts, 2)
+          server.close(done)
+        }
+      }
+    }
+
+    new Channel(io, Request, '/', ChannelController)
+    server.listen(5000)
+
+    let client = null
+    let client1 = null
+
+    client = wsClient.connect(socketUrl, options)
+    client1 = wsClient.connect(socketUrl, options)
+
+    client.on('greeting', function () {
+      grettingReceivedCounts++
+      client.disconnect()
+    })
+
+    client1.on('greeting', function () {
+      grettingReceivedCounts++
+      client1.disconnect()
+    })
+
+    client.on('connect', function () {
+      client.emit('join:ad:room', {room: 'lobby', body: {}})
+    })
+
+    client1.on('connect', function () {
+      client1.emit('join:ad:room', {room: 'lobby', body: {}}, function () {
+        client.emit('ready')
+      })
+    })
+  })
+
+  it('socket client should recieve the message when a message is broadcasted in multiple rooms', function (done) {
+    const server = http.createServer(function (req, res) {})
+    const io = socketio(server)
+    let grettingReceivedCounts = 0
+    let disconnectCount = 0
+
+    class ChannelController {
+      constructor (socket) {
+        this.socket = socket
+      }
+
+      onReady () {
+        this.socket.inRooms(['lobby']).emit('greeting', 'Hello world')
+      }
+
+      disconnected () {
+        disconnectCount++
+        if (disconnectCount === 2) {
+          assert.equal(grettingReceivedCounts, 2)
+          server.close(done)
+        }
+      }
+    }
+
+    new Channel(io, Request, '/', ChannelController)
+    server.listen(5000)
+
+    let client = null
+    let client1 = null
+
+    client = wsClient.connect(socketUrl, options)
+    client1 = wsClient.connect(socketUrl, options)
+
+    client.on('greeting', function () {
+      grettingReceivedCounts++
+      client.disconnect()
+    })
+
+    client1.on('greeting', function () {
+      grettingReceivedCounts++
+      client1.disconnect()
+    })
+
+    client.on('connect', function () {
+      client.emit('join:ad:room', {room: 'lobby', body: {}})
+    })
+
+    client1.on('connect', function () {
+      client1.emit('join:ad:room', {room: 'lobby', body: {}}, function () {
+        client.emit('ready')
+      })
+    })
+  })
+
+  it('socket client should recieve the message when a message is broadcasted to a room via channel instance', function (done) {
+    const server = http.createServer(function (req, res) {})
+    const io = socketio(server)
+    let grettingReceivedCounts = 0
+    let disconnectCount = 0
+
+    const channel = new Channel(io, Request, '/', function (socket) {
+      socket.on('ready', function () {
+        channel.inRoom('lobby').emit('greeting', 'Hello world')
+      })
+    })
+
+    channel.disconnected(function () {
+      disconnectCount++
+      if (disconnectCount === 2) {
+        assert.equal(grettingReceivedCounts, 2)
+        server.close(done)
+      }
+    })
+
+    server.listen(5000)
+
+    let client = null
+    let client1 = null
+
+    client = wsClient.connect(socketUrl, options)
+    client1 = wsClient.connect(socketUrl, options)
+
+    client.on('greeting', function () {
+      grettingReceivedCounts++
+      client.disconnect()
+    })
+
+    client1.on('greeting', function () {
+      grettingReceivedCounts++
+      client1.disconnect()
+    })
+
+    client.on('connect', function () {
+      client.emit('join:ad:room', {room: 'lobby', body: {}})
+    })
+
+    client1.on('connect', function () {
+      client1.emit('join:ad:room', {room: 'lobby', body: {}}, function () {
+        client.emit('ready')
+      })
+    })
+  })
+
+  it('should be able to emit messages to multiple rooms', function (done) {
+    const server = http.createServer(function (req, res) {})
+    const io = socketio(server)
+    let grettingReceivedCounts = 0
+    let disconnectCount = 0
+
+    const channel = new Channel(io, Request, '/', function (socket) {
+      socket.on('ready', function () {
+        channel.inRooms(['lobby']).emit('greeting', 'Hello world')
+      })
+    })
+
+    channel.disconnected(function () {
+      disconnectCount++
+      if (disconnectCount === 2) {
+        assert.equal(grettingReceivedCounts, 2)
+        server.close(done)
+      }
+    })
+
+    server.listen(5000)
+
+    let client = null
+    let client1 = null
+
+    client = wsClient.connect(socketUrl, options)
+    client1 = wsClient.connect(socketUrl, options)
+
+    client.on('greeting', function () {
+      grettingReceivedCounts++
+      client.disconnect()
+    })
+
+    client1.on('greeting', function () {
+      grettingReceivedCounts++
+      client1.disconnect()
+    })
+
+    client.on('connect', function () {
+      client.emit('join:ad:room', {room: 'lobby', body: {}})
+    })
+
+    client1.on('connect', function () {
+      client1.emit('join:ad:room', {room: 'lobby', body: {}}, function () {
+        client.emit('ready')
+      })
+    })
   })
 })

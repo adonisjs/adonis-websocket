@@ -43,6 +43,32 @@ describe('Ws', function () {
     Server.getInstance().close()
   })
 
+  it('should return the same channel instance when channel is called serveral times', function () {
+    Server.listen(5000)
+    const ws = new Ws(Config, Request, Server)
+    const channel = ws.channel('/', function () {})
+    const channel1 = ws.channel('/', function () {})
+    assert.instanceOf(channel, Channel)
+    assert.instanceOf(channel1, Channel)
+    assert.deepEqual(channel, channel1)
+    Server.getInstance().close()
+  })
+
+  it('should return the channel instance when closure is not passed to the channel method', function () {
+    Server.listen(5000)
+    const ws = new Ws(Config, Request, Server)
+    ws.channel('/', function () {})
+    const channel = ws.channel('/')
+    assert.instanceOf(channel, Channel)
+    Server.getInstance().close()
+  })
+
+  it('should throw exception when trying to get undefined channel', function () {
+    const ws = new Ws(Config, Request, Server)
+    const channel = () => ws.channel('/')
+    assert.throw(channel, 'Cannot find / channel')
+  })
+
   it('should be able to bind a custom http server', function () {
     Server.listen(5000)
     const ws = new Ws({

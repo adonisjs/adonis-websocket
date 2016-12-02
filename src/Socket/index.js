@@ -11,6 +11,7 @@
 
 const _ = require('lodash')
 const util = require('../../lib/util')
+const Resetable = require('../../lib/Resetable')
 
 class AdonisSocket {
 
@@ -27,7 +28,7 @@ class AdonisSocket {
      *
      * @type {String}
      */
-    this._emitScope = 'notme'
+    this._emitScope = new Resetable('notme')
 
     /**
      * Map of methods to the emit scope name
@@ -41,15 +42,22 @@ class AdonisSocket {
     }
   }
 
+  /**
+   * Returns the socket id
+   *
+   * @return {String}
+   */
   get id () {
     return this.socket.id
   }
 
   /**
-   * Resets emit scope to the default scope
+   * Returns the list of socket rooms
+   *
+   * @return {Object}
    */
-  _resetEmitScope () {
-    this._emitScope = 'notme'
+  get rooms () {
+    return this.socket.rooms
   }
 
   /**
@@ -106,12 +114,36 @@ class AdonisSocket {
   }
 
   /**
+   * Send a message to a single room
+   *
+   * @param {String} room
+   *
+   * @return {Object} reference to {this} for chaining
+   */
+  inRoom (room) {
+    this._emitScope.set([room])
+    return this
+  }
+
+  /**
+   * Send a message to multiple rooms
+   *
+   * @param {Array} rooms
+   *
+   * @return {Object} reference to {this} for chaining
+   */
+  inRooms (rooms) {
+    this._emitScope.set(rooms)
+    return this
+  }
+
+  /**
    * Emit messages to everyone.
    *
    * @return {Object} reference to {this} for chaining
    */
   toEveryone () {
-    this._emitScope = 'everyone'
+    this._emitScope.set('everyone')
     return this
   }
 
@@ -121,7 +153,7 @@ class AdonisSocket {
    * @return {Object} reference to {this} for chaining
    */
   toMe () {
-    this._emitScope = 'me'
+    this._emitScope.set('me')
     return this
   }
 
@@ -133,7 +165,7 @@ class AdonisSocket {
    * @return {Object} reference to {this} for chaining
    */
   to (ids) {
-    this._emitScope = ids
+    this._emitScope.set(ids)
     return this
   }
 
@@ -143,7 +175,7 @@ class AdonisSocket {
    * @return {Object} reference to {this} for chaining
    */
   exceptMe () {
-    this._emitScope = 'notme'
+    this._emitScope.set('notme')
     return this
   }
 
@@ -152,14 +184,14 @@ class AdonisSocket {
    * default.
    */
   emit () {
+    const emitScope = this._emitScope.pull()
     /**
      * If emitScope is a string then call one of the
      * define methods.
      */
-    if (typeof (this._emitScope) === 'string') {
-      const method = this._emitScopeMethods[this._emitScope]
+    if (typeof (emitScope) === 'string') {
+      const method = this._emitScopeMethods[emitScope]
       this[method](_.toArray(arguments))
-      this._resetEmitScope()
       return
     }
 
@@ -167,13 +199,26 @@ class AdonisSocket {
      * Here we send messages to list of selected
      * socket ids.
      */
-    if (_.isArray(this._emitScope)) {
-      this._emitScope.forEach((id) => {
+    if (_.isArray(emitScope)) {
+      emitScope.forEach((id) => {
         const to = this.io.to(id)
         to.emit.apply(to, _.toArray(arguments))
       })
-      this._resetEmitScope()
     }
+  }
+
+  /**
+   * Join a given room
+   */
+  join (room) {
+    this.socket.join(room)
+  }
+
+  /**
+   * Leave a given room
+   */
+  leave (room) {
+    this.socket.leave(room)
   }
 }
 

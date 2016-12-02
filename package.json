@@ -8,6 +8,7 @@
   },
   "scripts": {
     "test": "npm run lint && _mocha test/unit/*.spec.js",
+    "coverage": "istanbul cover _mocha test/unit/*.spec.js",
     "lint": "standard"
   },
   "keywords": [
@@ -42,8 +43,9 @@
   },
   "dependencies": {
     "co": "^4.6.0",
+    "co-compose": "^1.0.0",
+    "es6-class-mixin": "^1.0.5",
     "lodash": "^4.17.2",
-    "socket.io": "^1.5.1",
-    "socket.io-redis": "^1.1.1"
+    "socket.io": "^1.5.1"
   }
 }
