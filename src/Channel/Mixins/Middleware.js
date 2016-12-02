@@ -26,9 +26,12 @@ const Middleware = exports = module.exports = {}
  */
 Middleware._initiateSocket = function () {
   this.io.use((socket, next) => {
+    const request = new this.Request(socket.request, new Response())
+    const session = new this.Session(socket.request, new Response())
+    request.session = session
     this._wsPool[socket.id] = {
       socket: new Socket(this.io, socket),
-      request: new this.Request(socket.request, new Response())
+      request: request
     }
     next()
   })

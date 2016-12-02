@@ -12,14 +12,21 @@
 const Channel = require('../Channel')
 const socketio = require('socket.io')
 const defaultConfig = require('../../examples/config')
+const sessionMethodsToDisable = ['put', 'pull', 'flush', 'forget']
 
 class Ws {
 
-  constructor (Config, Request, Server) {
+  constructor (Config, Request, Server, Session) {
     this.config = Config.get('ws', defaultConfig)
     this.io = this.config.useHttpServer ? socketio(Server.getInstance()) : null
     this._channelsPool = {}
     this.Request = Request
+    this.Session = Session
+    sessionMethodsToDisable.forEach((method) => {
+      this.Session.prototype[method] = function () {
+        throw new Error('Cannot mutate session values during websocket request')
+      }
+    })
   }
 
   /**
@@ -47,7 +54,7 @@ class Ws {
       return channel
     }
 
-    this._channelsPool[name] = this._channelsPool[name] || new Channel(this.io, this.Request, name, closure)
+    this._channelsPool[name] = this._channelsPool[name] || new Channel(this.io, this.Request, this.Session, name, closure)
     return this._channelsPool[name]
   }
 

@@ -18,7 +18,7 @@ const Resetable = require('../../lib/Resetable')
 
 class Channel {
 
-  constructor (io, Request, name, closure) {
+  constructor (io, Request, Session, name, closure) {
     this.io = name === '/' ? io : io.of(name)
 
     /**
@@ -46,6 +46,7 @@ class Channel {
      * @type {Class}
      */
     this.Request = Request
+    this.Session = Session
 
     /**
      * Custom middleware to be executed for each socket
