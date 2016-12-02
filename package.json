@@ -4,10 +4,11 @@
   "description": "Adonisjs websockets support",
   "main": "index.js",
   "directories": {
+    "example": "examples",
     "test": "test"
   },
   "scripts": {
-    "test": "npm run lint && _mocha test/unit/*.spec.js",
+    "test": "npm run lint && istanbul cover _mocha --report lcovonly test/unit/*.spec.js && cat ./coverage/lcov.info | coveralls && rm -rf ./coverage",
     "coverage": "istanbul cover _mocha test/unit/*.spec.js",
     "lint": "standard"
   },
@@ -21,10 +22,11 @@
   "license": "MIT",
   "devDependencies": {
     "chai": "^3.5.0",
-    "coveralls": "^2.11.14",
+    "coveralls": "^2.11.15",
     "cz-conventional-changelog": "^1.2.0",
     "istanbul": "^0.4.5",
     "mocha": "^3.1.2",
+    "mocha-lcov-reporter": "^1.2.0",
     "sinon": "^1.17.6",
     "socket.io-client": "^1.5.1",
     "standard": "^8.5.0"
@@ -47,5 +49,13 @@
     "es6-class-mixin": "^1.0.5",
     "lodash": "^4.17.2",
     "socket.io": "^1.5.1"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/adonisjs/adonis-websocket.git"
+  },
+  "bugs": {
+    "url": "https://github.com/adonisjs/adonis-websocket/issues"
+  },
+  "homepage": "https://github.com/adonisjs/adonis-websocket#readme"
 }
