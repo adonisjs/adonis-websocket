@@ -17,7 +17,6 @@
 const co = require('co')
 const Socket = require('../../Socket')
 const Response = require('../../Response')
-const util = require('../../../lib/util')
 
 const Middleware = exports = module.exports = {}
 
