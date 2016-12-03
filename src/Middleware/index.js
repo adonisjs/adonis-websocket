@@ -13,6 +13,7 @@ const CoCompose = require('co-compose')
 const Ioc = require('adonis-fold').Ioc
 const haye = require('haye')
 const _ = require('lodash')
+const CE = require('../Exceptions')
 let store = new CoCompose()
 
 const Middleware = exports = module.exports = {}
@@ -88,7 +89,7 @@ Middleware.resolve = function (namedList) {
     }
     const formattedItem = haye.fromPipe(item).toArray()[0]
     if (!namedMiddleware[formattedItem.name]) {
-      throw new Error(`Cannot find ${formattedItem.name} middleware`)
+      throw CE.RuntimeException.missingNamedMiddleware(formattedItem.name)
     }
     return {namespace: namedMiddleware[formattedItem.name], args: formattedItem.args}
   }))

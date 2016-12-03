@@ -12,6 +12,7 @@
 const mixin = require('es6-class-mixin')
 const _ = require('lodash')
 const Mixins = require('./Mixins')
+const CE = require('../Exceptions')
 const util = require('../../lib/util')
 const Resetable = require('../../lib/Resetable')
 
@@ -197,7 +198,7 @@ class Channel {
    */
   disconnected (fn) {
     if (typeof (fn) !== 'function') {
-      throw new Error('Make sure to pass a function for disconnected event')
+      throw CE.InvalidArgumentException.invalidParameter('Make sure to pass a function for disconnected event')
     }
     this._disconnectedFn = util.wrapIfGenerator(fn)
   }
@@ -211,7 +212,7 @@ class Channel {
    */
   joinRoom (fn) {
     if (typeof (fn) !== 'function') {
-      throw new Error('Make sure to pass a function for joinRoom event')
+      throw CE.InvalidArgumentException.invalidParameter('Make sure to pass a function for joinRoom event')
     }
     this._roomJoinFn = util.wrapIfGenerator(fn)
     return this
@@ -226,7 +227,7 @@ class Channel {
    */
   leaveRoom (fn) {
     if (typeof (fn) !== 'function') {
-      throw new Error('Make sure to pass a function for leaveRoom event')
+      throw CE.InvalidArgumentException.invalidParameter('Make sure to pass a function for leaveRoom event')
     }
     this._roomLeaveFn = util.wrapIfGenerator(fn)
     return this

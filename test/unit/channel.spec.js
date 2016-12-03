@@ -66,7 +66,7 @@ describe('Channel', function () {
       const channel = new Channel(io, Request, Session, '/', function () {}).disconnected()
       assert.equal(channel, undefined)
     } catch (e) {
-      assert.equal(e.message, 'Make sure to pass a function for disconnected event')
+      assert.equal(e.message, 'E_INVALID_PARAMETER: Make sure to pass a function for disconnected event')
     }
   })
 
@@ -610,7 +610,7 @@ describe('Channel', function () {
       const channel = new Channel(io, Request, Session, '/', function () {})
       channel.joinRoom()
     } catch (e) {
-      assert.equal(e.message, 'Make sure to pass a function for joinRoom event')
+      assert.equal(e.message, 'E_INVALID_PARAMETER: Make sure to pass a function for joinRoom event')
     }
   })
 
@@ -792,7 +792,7 @@ describe('Channel', function () {
       const channel = new Channel(io, Request, Session, '/', function () {})
       channel.leaveRoom()
     } catch (e) {
-      assert.equal(e.message, 'Make sure to pass a function for leaveRoom event')
+      assert.equal(e.message, 'E_INVALID_PARAMETER: Make sure to pass a function for leaveRoom event')
     }
   })
 

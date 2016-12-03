@@ -57,7 +57,7 @@ describe('Middleware', function () {
       bar: 'App/Bar'
     })
     const resolved = () => Middleware.resolve(['baz'])
-    assert.throw(resolved, 'Cannot find baz middleware')
+    assert.throw(resolved, 'RuntimeException: E_MISSING_NAMED_MIDDLEWARE: baz is not registered as a named middleware for Websockets')
   })
 
   it('should parse the named middleware runtime arguments', function () {

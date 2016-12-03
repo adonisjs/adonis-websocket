@@ -81,7 +81,7 @@ describe('Ws', function () {
   it('should throw exception when trying to get undefined channel', function () {
     const ws = new Ws(Config, Request, Server, Session)
     const channel = () => ws.channel('/')
-    assert.throw(channel, 'Cannot find / channel')
+    assert.throw(channel, 'RuntimeException: E_UNINITIALIZED_METHOD: Trying to access uninitialized channel /')
   })
 
   it('should be able to bind a custom http server', function () {

@@ -13,6 +13,7 @@ const socketio = require('socket.io')
 const Ioc = require('adonis-fold').Ioc
 const Channel = require('../Channel')
 const Middleware = require('../Middleware')
+const CE = require('../Exceptions')
 const defaultConfig = require('../../examples/config')
 const sessionMethodsToDisable = ['put', 'pull', 'flush', 'forget']
 
@@ -44,7 +45,7 @@ class Ws {
      */
     sessionMethodsToDisable.forEach((method) => {
       this.Session.prototype[method] = function () {
-        throw new Error('Cannot mutate session values during websocket request')
+        throw CE.RuntimeException.invalidAction('Cannot mutate session values during websocket request')
       }
     })
   }
@@ -77,7 +78,7 @@ class Ws {
     if (!closure) {
       const channel = this._channelsPool[name]
       if (!channel) {
-        throw new Error(`Cannot find ${name} channel`)
+        throw CE.RuntimeException.uninitializedChannel(name)
       }
       return channel
     }
