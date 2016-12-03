@@ -10,6 +10,7 @@
 */
 
 const socketio = require('socket.io')
+const Ioc = require('adonis-fold').Ioc
 const Channel = require('../Channel')
 const Middleware = require('../Middleware')
 const defaultConfig = require('../../examples/config')
@@ -17,13 +18,15 @@ const sessionMethodsToDisable = ['put', 'pull', 'flush', 'forget']
 
 class Ws {
 
-  constructor (Config, Request, Server, Session) {
+  constructor (Config, Request, Server, Session, Helpers) {
     class WsSession extends Session {
     }
     this.config = Config.get('ws', defaultConfig)
     this.io = this.config.useHttpServer ? socketio(Server.getInstance()) : null
     this.Request = Request
     this.Session = WsSession
+    this.Helpers = Helpers
+    this.controllersPath = 'Ws/Controllers'
 
     /**
      * Channels pool to store channel instances. This is done
@@ -58,6 +61,14 @@ class Ws {
    * @throws {Error} when trying to access a non-existing channel
    */
   channel (name, closure) {
+    /**
+     * If closure is a string. Resolve it as a controller from autoloaded
+     * controllers.
+     */
+    if (typeof (closure) === 'string') {
+      closure = Ioc.use(this.Helpers.makeNameSpace(this.controllersPath, closure))
+    }
+
     /**
      * Behave as a getter when closure is not defined.
      * Also make sure to throw exception when channel

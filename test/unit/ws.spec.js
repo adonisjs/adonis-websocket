@@ -12,10 +12,16 @@
 const chai = require('chai')
 const assert = chai.assert
 const http = require('http')
+const Ioc = require('adonis-fold').Ioc
 const wsClient = require('socket.io-client')
 const Ws = require('../../src/Ws')
 const Channel = require('../../src/Channel')
 class Session {}
+const Helpers = {
+  makeNameSpace (namespace, controller) {
+    return `${namespace}/${controller}`
+  }
+}
 
 const socketUrl = 'http://0.0.0.0:5000'
 const options = {
@@ -100,6 +106,23 @@ describe('Ws', function () {
       client.disconnect()
       Server.getInstance().close(done)
     })
+    let client = null
+    client = wsClient.connect(socketUrl, options)
+  })
+
+  it('should return the ioc binding when channel closure is a string', function (done) {
+    Server.listen(5000)
+    Ioc.bind('Ws/Controllers/ChannelController', function () {
+      class ChannelController {
+        constructor () {
+          client.disconnect()
+          Server.getInstance().close(done)
+        }
+      }
+      return ChannelController
+    })
+    const ws = new Ws(Config, Request, Server, Session, Helpers)
+    ws.channel('/', 'ChannelController')
     let client = null
     client = wsClient.connect(socketUrl, options)
   })

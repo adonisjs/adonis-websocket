@@ -11,7 +11,8 @@ class WsProvider extends ServiceProvider {
       const Request = app.use('Adonis/Src/Request')
       const Server = app.use('Adonis/Src/Server')
       const Session = app.use('Adonis/Src/Session')
-      return new Ws(Config, Request, Server, Session)
+      const Helpers = app.use('Adonis/Src/Helpers')
+      return new Ws(Config, Request, Server, Session, Helpers)
     })
   }
 
