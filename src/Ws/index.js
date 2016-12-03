@@ -9,19 +9,36 @@
  * file that was distributed with this source code.
 */
 
-const Channel = require('../Channel')
 const socketio = require('socket.io')
+const Channel = require('../Channel')
+const Middleware = require('../Middleware')
 const defaultConfig = require('../../examples/config')
 const sessionMethodsToDisable = ['put', 'pull', 'flush', 'forget']
 
 class Ws {
 
   constructor (Config, Request, Server, Session) {
+    class WsSession extends Session {
+    }
     this.config = Config.get('ws', defaultConfig)
     this.io = this.config.useHttpServer ? socketio(Server.getInstance()) : null
-    this._channelsPool = {}
     this.Request = Request
-    this.Session = Session
+    this.Session = WsSession
+
+    /**
+     * Channels pool to store channel instances. This is done
+     * to avoid multiple channel instantiation.
+     *
+     * @type {Object}
+     */
+    this._channelsPool = {}
+
+    /**
+     * Here we override methods on the session provider extended
+     * class to make sure the end user is not mutating the
+     * session state, since we do not have access to the
+     * response object.
+     */
     sessionMethodsToDisable.forEach((method) => {
       this.Session.prototype[method] = function () {
         throw new Error('Cannot mutate session values during websocket request')
@@ -66,6 +83,24 @@ class Ws {
    */
   attach (server) {
     this.io = socketio(server)
+  }
+
+  /**
+   * Register global middleware
+   *
+   * @param {Array} list
+   */
+  global (list) {
+    Middleware.global(list)
+  }
+
+  /**
+   * Register named middleware
+   *
+   * @param {Object} set
+   */
+  named (set) {
+    Middleware.set(set)
   }
 
 }

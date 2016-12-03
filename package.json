@@ -21,6 +21,7 @@
   "author": "adonisjs,amanvirk",
   "license": "MIT",
   "devDependencies": {
+    "adonis-fold": "^3.0.3",
     "chai": "^3.5.0",
     "coveralls": "^2.11.15",
     "cz-conventional-changelog": "^1.2.0",
@@ -40,13 +41,15 @@
     "global": [
       "it",
       "should",
-      "describe"
+      "describe",
+      "beforeEach"
     ]
   },
   "dependencies": {
     "co": "^4.6.0",
     "co-compose": "^1.0.0",
     "es6-class-mixin": "^1.0.5",
+    "haye": "^1.0.1",
     "lodash": "^4.17.2",
     "socket.io": "^1.5.1"
   },

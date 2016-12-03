@@ -11,7 +11,6 @@
 
 const mixin = require('es6-class-mixin')
 const _ = require('lodash')
-const ComposeMiddleware = require('co-compose')
 const Mixins = require('./Mixins')
 const util = require('../../lib/util')
 const Resetable = require('../../lib/Resetable')
@@ -54,7 +53,7 @@ class Channel {
      *
      * @type {Array}
      */
-    this._middleware = new ComposeMiddleware()
+    this._middleware = []
 
     /**
      * Reference to the instances of Adonis Socket class
@@ -125,7 +124,7 @@ class Channel {
    */
   middleware (middleware) {
     const args = _.isArray(middleware) ? middleware : _.toArray(arguments)
-    this._middleware.register(args)
+    this._middleware = this._middleware.concat(args)
     return this
   }
 
@@ -236,7 +235,7 @@ class Channel {
 
 class ExtendedChannel extends mixin(
   Channel,
-  Mixins.Middleware,
+  Mixins.Setup,
   Mixins.LifeCycle,
   Mixins.Rooms
 ) {}

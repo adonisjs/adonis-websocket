@@ -10,7 +10,7 @@
 */
 
 module.exports = {
-  Middleware: require('./Middleware'),
+  Setup: require('./Setup'),
   LifeCycle: require('./LifeCycle'),
   Rooms: require('./Rooms')
 }
