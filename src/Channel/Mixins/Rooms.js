@@ -31,7 +31,7 @@ Rooms._onJoinRoom = function * (socket, request, payload, callback) {
   callback = callback || function () {}
   const roomJoinFn = this._roomJoinFn
   try {
-    util.isGenerator(roomJoinFn) ? yield roomJoinFn(socket, payload.room, payload.body) : roomJoinFn(socket, payload.room, payload.body)
+    util.isGenerator(roomJoinFn) ? yield roomJoinFn(payload.room, payload.body, socket) : roomJoinFn(payload.room, payload.body, socket)
     socket.join(payload.room)
     callback(null, true)
   } catch (error) {
@@ -53,7 +53,7 @@ Rooms._onLeaveRoom = function * (socket, request, payload, callback) {
   callback = callback || function () {}
   const roomLeaveFn = this._roomLeaveFn
   try {
-    util.isGenerator(roomLeaveFn) ? yield roomLeaveFn(socket, payload.room, payload.body) : roomLeaveFn(socket, payload.room, payload.body)
+    util.isGenerator(roomLeaveFn) ? yield roomLeaveFn(payload.room, payload.body, socket) : roomLeaveFn(payload.room, payload.body, socket)
     socket.leave(payload.room)
     callback(null, true)
   } catch (error) {

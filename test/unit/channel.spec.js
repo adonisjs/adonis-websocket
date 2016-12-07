@@ -584,7 +584,7 @@ describe('Channel', function () {
 
     const io = socketio(server)
     const channel = new Channel(io, Request, Session, '/', function () {})
-    channel.joinRoom(function (socket, room, body) {
+    channel.joinRoom(function (room, body, socket) {
       assert.equal(room, 'lobby')
       assert.equal(socket.id, body.id)
       setTimeout(function () {
@@ -619,7 +619,7 @@ describe('Channel', function () {
 
     const io = socketio(server)
     const channel = new Channel(io, Request, Session, '/', function () {})
-    channel.joinRoom(function * (socket, room, body) {
+    channel.joinRoom(function * (room, body, socket) {
       assert.equal(room, 'lobby')
       assert.equal(socket.id, body.id)
       setTimeout(function () {
@@ -710,7 +710,7 @@ describe('Channel', function () {
 
     const io = socketio(server)
     const channel = new Channel(io, Request, Session, '/', function () {})
-    channel.leaveRoom(function (socket, room, body) {
+    channel.leaveRoom(function (room, body, socket) {
       assert.equal(room, 'lobby')
       assert.equal(socket.id, body.id)
       assert.equal(socket.rooms.lobby, 'lobby')
@@ -737,7 +737,7 @@ describe('Channel', function () {
 
     const io = socketio(server)
     const channel = new Channel(io, Request, Session, '/', function () {})
-    channel.leaveRoom(function * (socket, room, body) {
+    channel.leaveRoom(function * (room, body, socket) {
       assert.equal(room, 'lobby')
       assert.equal(socket.id, body.id)
       assert.equal(socket.rooms.lobby, 'lobby')
@@ -764,7 +764,7 @@ describe('Channel', function () {
 
     const io = socketio(server)
     const channel = new Channel(io, Request, Session, '/', function () {})
-    channel.leaveRoom(function * (socket, room, body) {
+    channel.leaveRoom(function * (room, body, socket) {
       assert.equal(socket.rooms.lobby, 'lobby')
       throw new Error('Cannot leave room')
     })
@@ -801,7 +801,7 @@ describe('Channel', function () {
 
     const io = socketio(server)
     class ChannelController {
-      joinRoom (socket, room, body) {
+      joinRoom (room, body, socket) {
         assert.equal(room, 'lobby')
         assert.equal(socket.id, body.id)
         setTimeout(function () {
@@ -826,7 +826,7 @@ describe('Channel', function () {
 
     const io = socketio(server)
     class ChannelController {
-      * joinRoom (socket, room, body) {
+      * joinRoom (room, body, socket) {
         assert.equal(room, 'lobby')
         assert.equal(socket.id, body.id)
         setTimeout(function () {
@@ -852,7 +852,7 @@ describe('Channel', function () {
     const io = socketio(server)
 
     class ChannelController {
-      leaveRoom (socket, room, body) {
+      leaveRoom (room, body, socket) {
         assert.equal(room, 'lobby')
         assert.equal(socket.id, body.id)
         assert.equal(socket.rooms.lobby, 'lobby')
