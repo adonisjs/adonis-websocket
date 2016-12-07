@@ -112,7 +112,7 @@ class Ws {
    * @param {Object} set
    */
   named (set) {
-    Middleware.set(set)
+    Middleware.named(set)
   }
 
 }
