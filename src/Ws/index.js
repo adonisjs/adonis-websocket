@@ -23,7 +23,8 @@ class Ws {
     class WsSession extends Session {
     }
     this.config = Config.get('ws', defaultConfig)
-    this.io = this.config.useHttpServer ? socketio(Server.getInstance()) : null
+    this.io = null
+    this.config.useHttpServer ? this.attach(Server.getInstance()) : null
     this.Request = Request
     this.Session = WsSession
     this.Helpers = Helpers
@@ -95,6 +96,10 @@ class Ws {
    */
   attach (server) {
     this.io = socketio(server)
+    this.io.ws = new (require('uws').Server)({
+      noServer: true,
+      perMessageDeflate: false
+    })
   }
 
   /**
