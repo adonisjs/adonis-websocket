@@ -71,7 +71,10 @@ class Channel {
      *
      * @type {Array}
      */
-    this._emitTo = new Resetable([])
+    this._emitTo = new Resetable({
+      ids: [],
+      rooms: []
+    })
 
     /**
      * The method to be invoked whenever someone leaves
@@ -137,7 +140,9 @@ class Channel {
    * @return {Object} reference to {this} for chaining
    */
   inRoom (room) {
-    this._emitTo.set([room])
+    const emitTo = this._emitTo.get()
+    emitTo.rooms = [room]
+    this._emitTo.set(emitTo)
     return this
   }
 
@@ -149,7 +154,9 @@ class Channel {
    * @return {Object} reference to {this} for chaining
    */
   inRooms (rooms) {
-    this._emitTo.set(rooms)
+    const emitTo = this._emitTo.get()
+    emitTo.rooms = rooms
+    this._emitTo.set(emitTo)
     return this
   }
 
@@ -159,7 +166,9 @@ class Channel {
    * @param {Array} ids
    */
   to (ids) {
-    this._emitTo.set(ids)
+    const emitTo = this._emitTo.get()
+    emitTo.ids = ids
+    this._emitTo.set(emitTo)
     return this
   }
 
@@ -169,13 +178,23 @@ class Channel {
   emit () {
     const emitTo = this._emitTo.pull()
     const args = _.toArray(arguments)
-    if (_.size(emitTo)) {
-      emitTo.forEach((id) => {
+    if (_.size(emitTo.ids)) {
+      emitTo.ids.forEach((id) => {
         const to = this.io.to(id)
         to.emit.apply(to, args)
       })
       return
     }
+
+    if (_.size(emitTo.rooms)) {
+      emitTo.rooms.forEach((room) => {
+        const to = this.io.to(room)
+        args.splice(1, 0, room)
+        to.emit.apply(to, args)
+      })
+      return
+    }
+
     this.io.sockets.emit.apply(this.io.sockets, args)
   }
 

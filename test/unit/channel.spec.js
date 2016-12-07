@@ -876,7 +876,7 @@ describe('Channel', function () {
     })
   })
 
-  it('socket client should recieve the message when a message is broadcasted to a room', function (done) {
+  it('socket client itself should not recieve the message when emit scope is not set to everyone', function (done) {
     const server = http.createServer(function (req, res) {})
     const io = socketio(server)
     let grettingReceivedCounts = 0
@@ -889,6 +889,124 @@ describe('Channel', function () {
 
       onReady () {
         this.socket.inRoom('lobby').emit('greeting', 'Hello world')
+      }
+
+      disconnected () {
+        disconnectCount++
+        if (disconnectCount === 1) {
+          client.disconnect()
+          assert.equal(grettingReceivedCounts, 1)
+          server.close(done)
+        }
+      }
+    }
+
+    new Channel(io, Request, Session, '/', ChannelController)
+    server.listen(5000)
+
+    let client = null
+    let client1 = null
+
+    client = wsClient.connect(socketUrl, options)
+    client1 = wsClient.connect(socketUrl, options)
+
+    client.on('greeting', function () {
+      grettingReceivedCounts++
+    })
+
+    client1.on('greeting', function () {
+      grettingReceivedCounts++
+      client1.disconnect()
+    })
+
+    client.on('connect', function () {
+      client.emit('join:ad:room', {room: 'lobby', body: {}})
+    })
+
+    client1.on('connect', function () {
+      client1.emit('join:ad:room', {room: 'lobby', body: {}}, function () {
+        client.emit('ready')
+      })
+    })
+  })
+
+  it('socket throw exception when trying to set scope to just me and emitting to a room', function (done) {
+    const server = http.createServer(function (req, res) {})
+    const io = socketio(server)
+
+    class ChannelController {
+      constructor (socket) {
+        this.socket = socket
+      }
+
+      onReady () {
+        try {
+          this.socket.toMe().inRoom('lobby').emit('greeting', 'Hello world')
+        } catch (e) {
+          assert.equal(e.message, 'E_UNDEFINED_METHOD: You are trying to send a message to yourself inside a room. Instead use toMe().emit()')
+          client.disconnect()
+          server.close(done)
+        }
+      }
+    }
+
+    new Channel(io, Request, Session, '/', ChannelController)
+    server.listen(5000)
+
+    let client = null
+
+    client = wsClient.connect(socketUrl, options)
+
+    client.on('connect', function () {
+      client.emit('ready')
+    })
+  })
+
+  it('socket throw exception when trying to set scope to just me and emitting to multiple rooms', function (done) {
+    const server = http.createServer(function (req, res) {})
+    const io = socketio(server)
+
+    class ChannelController {
+      constructor (socket) {
+        this.socket = socket
+      }
+
+      onReady () {
+        try {
+          this.socket.toMe().inRooms(['lobby']).emit('greeting', 'Hello world')
+        } catch (e) {
+          assert.equal(e.message, 'E_UNDEFINED_METHOD: You are trying to send a message to yourself inside a room. Instead use toMe().emit()')
+          client.disconnect()
+          server.close(done)
+        }
+      }
+    }
+
+    new Channel(io, Request, Session, '/', ChannelController)
+    server.listen(5000)
+
+    let client = null
+
+    client = wsClient.connect(socketUrl, options)
+
+    client.on('connect', function () {
+      client.emit('ready')
+    })
+  })
+
+  it('socket client should recieve the message when a message is broadcasted to a room', function (done) {
+    const server = http.createServer(function (req, res) {})
+    const io = socketio(server)
+    let grettingReceivedCounts = 0
+    let disconnectCount = 0
+
+    class ChannelController {
+      constructor (socket) {
+        this.socket = socket
+      }
+
+      onReady () {
+        this.socket.toEveryone().inRoom('lobby').emit('greeting', 'Hello world')
       }
 
       disconnected () {
@@ -909,12 +1027,14 @@ describe('Channel', function () {
     client = wsClient.connect(socketUrl, options)
     client1 = wsClient.connect(socketUrl, options)
 
-    client.on('greeting', function () {
+    client.on('greeting', function (room) {
+      assert.equal(room, 'lobby')
       grettingReceivedCounts++
       client.disconnect()
     })
 
-    client1.on('greeting', function () {
+    client1.on('greeting', function (room) {
+      assert.equal(room, 'lobby')
       grettingReceivedCounts++
       client1.disconnect()
     })
@@ -942,7 +1062,7 @@ describe('Channel', function () {
       }
 
       onReady () {
-        this.socket.inRooms(['lobby']).emit('greeting', 'Hello world')
+        this.socket.toEveryone().inRooms(['lobby']).emit('greeting', 'Hello world')
       }
 
       disconnected () {
@@ -1012,12 +1132,14 @@ describe('Channel', function () {
     client = wsClient.connect(socketUrl, options)
     client1 = wsClient.connect(socketUrl, options)
 
-    client.on('greeting', function () {
+    client.on('greeting', function (room) {
+      assert.equal(room, 'lobby')
       grettingReceivedCounts++
       client.disconnect()
     })
 
-    client1.on('greeting', function () {
+    client1.on('greeting', function (room) {
+      assert.equal(room, 'lobby')
       grettingReceivedCounts++
       client1.disconnect()
     })

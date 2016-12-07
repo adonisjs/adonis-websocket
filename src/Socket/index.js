@@ -11,6 +11,7 @@
 
 const _ = require('lodash')
 const util = require('../../lib/util')
+const CE = require('../Exceptions')
 const Resetable = require('../../lib/Resetable')
 
 class AdonisSocket {
@@ -28,7 +29,11 @@ class AdonisSocket {
      *
      * @type {String}
      */
-    this._emitScope = new Resetable('notme')
+    this._emitScope = new Resetable({
+      scope: 'notme',
+      ids: [],
+      rooms: []
+    })
 
     /**
      * Map of methods to the emit scope name
@@ -121,7 +126,12 @@ class AdonisSocket {
    * @return {Object} reference to {this} for chaining
    */
   inRoom (room) {
-    this._emitScope.set([room])
+    const emitScope = this._emitScope.get()
+    if (emitScope.scope === 'me') {
+      throw CE.RuntimeException.invalidAction('You are trying to send a message to yourself inside a room. Instead use toMe().emit()')
+    }
+    emitScope.rooms = [room]
+    this._emitScope.set(emitScope)
     return this
   }
 
@@ -133,7 +143,12 @@ class AdonisSocket {
    * @return {Object} reference to {this} for chaining
    */
   inRooms (rooms) {
-    this._emitScope.set(rooms)
+    const emitScope = this._emitScope.get()
+    if (emitScope.scope === 'me') {
+      throw CE.RuntimeException.invalidAction('You are trying to send a message to yourself inside a room. Instead use toMe().emit()')
+    }
+    emitScope.rooms = rooms
+    this._emitScope.set(emitScope)
     return this
   }
 
@@ -143,7 +158,9 @@ class AdonisSocket {
    * @return {Object} reference to {this} for chaining
    */
   toEveryone () {
-    this._emitScope.set('everyone')
+    const emitScope = this._emitScope.get()
+    emitScope.scope = 'everyone'
+    this._emitScope.set(emitScope)
     return this
   }
 
@@ -153,7 +170,9 @@ class AdonisSocket {
    * @return {Object} reference to {this} for chaining
    */
   toMe () {
-    this._emitScope.set('me')
+    const emitScope = this._emitScope.get()
+    emitScope.scope = 'me'
+    this._emitScope.set(emitScope)
     return this
   }
 
@@ -165,7 +184,9 @@ class AdonisSocket {
    * @return {Object} reference to {this} for chaining
    */
   to (ids) {
-    this._emitScope.set(ids)
+    const emitScope = this._emitScope.get()
+    emitScope.ids = ids
+    this._emitScope.set(emitScope)
     return this
   }
 
@@ -175,7 +196,9 @@ class AdonisSocket {
    * @return {Object} reference to {this} for chaining
    */
   exceptMe () {
-    this._emitScope.set('notme')
+    const emitScope = this._emitScope.get()
+    emitScope.scope = 'notme'
+    this._emitScope.set(emitScope)
     return this
   }
 
@@ -185,26 +208,35 @@ class AdonisSocket {
    */
   emit () {
     const emitScope = this._emitScope.pull()
-    /**
-     * If emitScope is a string then call one of the
-     * define methods.
-     */
-    if (typeof (emitScope) === 'string') {
-      const method = this._emitScopeMethods[emitScope]
-      this[method](_.toArray(arguments))
-      return
-    }
 
     /**
      * Here we send messages to list of selected
      * socket ids.
      */
-    if (_.isArray(emitScope)) {
-      emitScope.forEach((id) => {
+    if (_.size(emitScope.ids)) {
+      emitScope.ids.forEach((id) => {
         const to = this.io.to(id)
         to.emit.apply(to, _.toArray(arguments))
       })
+      return
     }
+
+    /**
+     * If emitScope is a string then call one of the
+     * define methods.
+     */
+    if (_.size(emitScope.rooms)) {
+      emitScope.rooms.forEach((room) => {
+        const to = emitScope.scope === 'notme' ? this.socket.broadcast.to(room) : this.io.to(room)
+        const args = _.toArray(arguments)
+        args.splice(1, 0, room)
+        to.emit.apply(to, args)
+      })
+      return
+    }
+
+    const method = this._emitScopeMethods[emitScope.scope]
+    this[method](_.toArray(arguments))
   }
 
   /**
