@@ -1,0 +1,66 @@
+{
+  "name": "adonis-websocket",
+  "version": "1.0.0",
+  "description": "Adonisjs websockets support",
+  "main": "index.js",
+  "directories": {
+    "example": "examples",
+    "test": "test"
+  },
+  "scripts": {
+    "test": "npm run lint && istanbul cover _mocha --report lcovonly test/unit/*.spec.js && cat ./coverage/lcov.info | coveralls && rm -rf ./coverage",
+    "coverage": "istanbul cover _mocha test/unit/*.spec.js",
+    "lint": "standard"
+  },
+  "keywords": [
+    "adonis",
+    "adonisjs",
+    "websockets",
+    "socketio"
+  ],
+  "author": "adonisjs,amanvirk",
+  "license": "MIT",
+  "devDependencies": {
+    "adonis-fold": "^3.0.3",
+    "chai": "^3.5.0",
+    "coveralls": "^2.11.15",
+    "cz-conventional-changelog": "^1.2.0",
+    "istanbul": "^0.4.5",
+    "mocha": "^3.1.2",
+    "mocha-lcov-reporter": "^1.2.0",
+    "sinon": "^1.17.6",
+    "socket.io-client": "^1.5.1",
+    "standard": "^8.5.0"
+  },
+  "config": {
+    "commitizen": {
+      "path": "./node_modules/cz-conventional-changelog"
+    }
+  },
+  "standard": {
+    "global": [
+      "it",
+      "should",
+      "describe",
+      "beforeEach"
+    ]
+  },
+  "dependencies": {
+    "co": "^4.6.0",
+    "co-compose": "^1.0.0",
+    "es6-class-mixin": "^1.0.5",
+    "haye": "^1.0.1",
+    "lodash": "^4.17.2",
+    "node-exceptions": "^1.0.3",
+    "socket.io": "^1.5.1",
+    "uws": "^0.12.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/adonisjs/adonis-websocket.git"
+  },
+  "bugs": {
+    "url": "https://github.com/adonisjs/adonis-websocket/issues"
+  },
+  "homepage": "https://github.com/adonisjs/adonis-websocket#readme"
+}
