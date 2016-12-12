@@ -209,6 +209,25 @@ describe('Channel', function () {
     })
   })
 
+  it('should be able to emit messages to everyone inside a namespace', function (done) {
+    const server = http.createServer(function () {})
+    const io = socketio(server)
+
+    new Channel(io, Request, Session, '/chat', function (socket) {
+      socket.toEveryone().emit('greet', 'virk')
+    })
+
+    server.listen(5000)
+
+    let client = null
+    client = wsClient.connect(`${socketUrl}/chat`, options)
+    client.on('greet', function (name) {
+      assert.equal(name, 'virk')
+      server.close(done)
+      client.disconnect()
+    })
+  })
+
   it('should be able to emit messages to all the connected clients', function (done) {
     const server = http.createServer(function () {})
     const io = socketio(server)
@@ -262,6 +281,31 @@ describe('Channel', function () {
     let client1 = null
     client = wsClient.connect(socketUrl, options)
     client1 = wsClient.connect(socketUrl, options)
+    client.on('greet', handler)
+    client1.on('greet', handler)
+  })
+
+  it('should be able to emit messages to everyone but not to itself inside a namespace', function (done) {
+    const server = http.createServer(function () {})
+
+    const io = socketio(server)
+    new Channel(io, Request, Session, '/chat', function (socket) {
+      socket.exceptMe().emit('greet', 'virk')
+    })
+
+    server.listen(5000)
+
+    const handler = function (name) {
+      assert.equal(name, 'virk')
+      server.close(done)
+      client.disconnect()
+      client1.disconnect()
+    }
+
+    let client = null
+    let client1 = null
+    client = wsClient.connect(`${socketUrl}/chat`, options)
+    client1 = wsClient.connect(`${socketUrl}/chat`, options)
     client.on('greet', handler)
     client1.on('greet', handler)
   })
@@ -329,6 +373,50 @@ describe('Channel', function () {
     })
   })
 
+  it('should be able to emit messages to itself only inside a namespace', function (done) {
+    const server = http.createServer(function () {})
+
+    const io = socketio(server)
+    new Channel(io, Request, Session, '/chat', function (socket) {
+      socket.on('ready', function () {
+        socket.toMe().emit('shout', socket.socket.id)
+      })
+    })
+    .disconnected(function () {
+      disconnectedCounts++
+      if (eventsCount === 2 && disconnectedCounts === 2) {
+        server.close(done)
+      }
+    })
+
+    server.listen(5000)
+
+    let disconnectedCounts = 0
+    let eventsCount = 0
+    let client = null
+    let client1 = null
+    client = wsClient.connect(`${socketUrl}/chat`, options)
+    client1 = wsClient.connect(`${socketUrl}/chat`, options)
+    client.on('shout', function (socketId) {
+      eventsCount++
+      assert.equal(`/chat#${client.id}`, socketId)
+      client.disconnect()
+    })
+
+    client1.on('shout', function (socketId) {
+      eventsCount++
+      assert.equal(`/chat#${client1.id}`, socketId)
+      client1.disconnect()
+    })
+
+    client.on('connect', function () {
+      client1.on('connect', function () {
+        client.emit('ready')
+        client1.emit('ready')
+      })
+    })
+  })
+
   it('should be able to emit messages to certain ids only', function (done) {
     const server = http.createServer(function () {})
 
@@ -378,6 +466,63 @@ describe('Channel', function () {
       clientsReadyCount++
       if (clientsReadyCount === 3) {
         client.emit('ready', [client1.id, client2.id])
+      }
+    }
+
+    client.on('connect', handler)
+    client1.on('connect', handler)
+    client2.on('connect', handler)
+  })
+
+  it('should be able to emit messages to certain ids only inside a namespace', function (done) {
+    const server = http.createServer(function () {})
+
+    const io = socketio(server)
+    new Channel(io, Request, Session, '/chat', function (socket) {
+      socket.on('ready', function (ids) {
+        socket.to(ids).emit('shout', {from: socket.socket.id, to: ids})
+      })
+    })
+    .disconnected(function (socket) {
+      disconnectedCounts++
+      if (eventsCount === 2 && disconnectedCounts === 2) {
+        client.disconnect()
+        server.close(done)
+      }
+    })
+
+    server.listen(5000)
+
+    let eventsCount = 0
+    let clientsReadyCount = 0
+    let disconnectedCounts = 0
+    let client = null
+    let client1 = null
+    let client2 = null
+    client = wsClient.connect(`${socketUrl}/chat`, options)
+    client1 = wsClient.connect(`${socketUrl}/chat`, options)
+    client2 = wsClient.connect(`${socketUrl}/chat`, options)
+
+    client1.on('shout', function (payload) {
+      eventsCount++
+      assert.equal(payload.to.indexOf(`${client.nsp}#${client1.id}`) > -1, true)
+      client1.disconnect()
+    })
+
+    client2.on('shout', function (payload) {
+      eventsCount++
+      assert.equal(payload.to.indexOf(`${client1.nsp}#${client2.id}`) > -1, true)
+      client2.disconnect()
+    })
+
+    client.on('shout', function () {
+      assert.throws('I never asked for a message')
+    })
+
+    const handler = function () {
+      clientsReadyCount++
+      if (clientsReadyCount === 3) {
+        client.emit('ready', [`${client1.nsp}#${client1.id}`, `${client2.nsp}#${client2.id}`])
       }
     }
 

@@ -1,3 +1,13 @@
+<a name="1.0.1"></a>
+## [1.0.1](https://github.com/adonisjs/adonis-websocket/compare/v1.0.0...v1.0.1) (2016-12-12)
+
+
+### Bug Fixes
+
+* **socket:** use nsp syntax to broadcast messages ([3d0e868](https://github.com/adonisjs/adonis-websocket/commit/3d0e868))
+
+
+
 <a name="1.0.0"></a>
 # 1.0.0 (2016-12-08)
 
