@@ -80,7 +80,7 @@ class AdonisSocket {
    * @param {Array} args
    */
   _emitToEveryone (args) {
-    this.io.sockets.emit.apply(this.io.sockets, args)
+    this.io.emit.apply(this.io, args)
   }
 
   /**
