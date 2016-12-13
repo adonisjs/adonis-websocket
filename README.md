@@ -1,5 +1,5 @@
 <p align="center">
-  <a href="http://adonisjs.com"><img src="https://cloud.githubusercontent.com/assets/2793951/19925021/865beda4-a0ee-11e6-85bb-20ccd8f72211.png" alt="AdonisJs WebSocket"></a>
+  <a href="http://adonisjs.com"><img src="https://cloud.githubusercontent.com/assets/2793951/21009311/3d5dd062-bd46-11e6-9f01-a1c2ff6fad37.png" alt="AdonisJs WebSocket"></a>
 </p>
 
 <p align="center">
