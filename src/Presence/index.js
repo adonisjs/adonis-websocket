@@ -15,7 +15,7 @@ class Presence {
 
   constructor (io) {
     this.io = io
-    this._users = {}
+    this._usersPool = {}
   }
 
   /**
@@ -25,11 +25,11 @@ class Presence {
    * @param {Number} user
    * @param {Object} [meta]
    */
-  track (socket, user, meta) {
+  track (socket, userId, meta) {
     meta = meta || null
     const self = this
     const payload = {
-      user, socket, meta
+      userId, socket, meta
     }
 
     /**
@@ -37,12 +37,12 @@ class Presence {
      * socket disconnects
      */
     payload.socket.on('disconnect', function () {
-      self.pull(this.user, (item) => item.socket.id === this.socket.id)
+      self.pull(this.userId, (user) => user.socket.id === this.socket.id)
       self.publishPresence()
     }.bind(payload))
 
-    this._users[user] = this._users[user] || []
-    this._users[user].push(payload)
+    this._usersPool[userId] = this._usersPool[userId] || []
+    this._usersPool[userId].push(payload)
     this.publishPresence()
   }
 
@@ -54,7 +54,7 @@ class Presence {
    * @return {Array}
    */
   get (userId) {
-    return this._users[userId]
+    return this._usersPool[userId]
   }
 
   /**
@@ -62,12 +62,12 @@ class Presence {
    * a given channel.
    */
   publishPresence () {
-    const publishPayload = _.map(this._users, (details) => {
-      return _.transform(details, (result, item) => {
-        result.id = result.id || item.user // MAKING SURE WE ARE NOT MUTATING IT EVERTIME
+    const publishPayload = _.map(this._usersPool, (users) => {
+      return _.transform(users, (result, user) => {
+        result.id = result.id || user.userId // MAKING SURE WE ARE NOT MUTATING IT EVERTIME
         result.payload.push({
-          socketId: item.socket.id,
-          meta: item.meta
+          socketId: user.socket.id,
+          meta: user.meta
         })
         return result
       }, {payload: []})
@@ -86,7 +86,14 @@ class Presence {
    */
   pull (userId, cb) {
     const sockets = this.get(userId)
-    return sockets ? _.remove(sockets, cb) : []
+    if (!sockets) {
+      return []
+    }
+    const removedSockets = _.remove(sockets, cb)
+    if (_.size(this.get(userId)) === 0) {
+      delete this._usersPool[userId]
+    }
+    return removedSockets
   }
 }
 

@@ -1535,7 +1535,7 @@ describe('Channel', function () {
             meta: {device: 'chrome'}
           }]
         }])
-        assert.lengthOf(channel.presence._users['1'], 2)
+        assert.lengthOf(channel.presence._usersPool['1'], 2)
         client.disconnect()
       } else {
         assert.deepEqual(state, [{
@@ -1545,7 +1545,7 @@ describe('Channel', function () {
             meta: {device: 'chrome'}
           }]
         }])
-        assert.lengthOf(channel.presence._users['1'], 1)
+        assert.lengthOf(channel.presence._usersPool['1'], 1)
         client1.disconnect()
         server.close(done)
       }

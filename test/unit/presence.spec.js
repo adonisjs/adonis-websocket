@@ -25,8 +25,8 @@ describe('Presence', function () {
       on: function () {}
     }
     presence.track(socket, 1)
-    assert.lengthOf(presence._users[1], 1)
-    assert.equal(presence._users[1][0].socket.id, 2)
+    assert.lengthOf(presence._usersPool[1], 1)
+    assert.equal(presence._usersPool[1][0].socket.id, 2)
   })
 
   it('should be able to track multiple users and thier sockets', function () {
@@ -41,10 +41,10 @@ describe('Presence', function () {
     }
     presence.track(socket, 1)
     presence.track(socket1, 2)
-    assert.lengthOf(presence._users[1], 1)
-    assert.lengthOf(presence._users[2], 1)
-    assert.equal(presence._users[1][0].socket.id, 2)
-    assert.equal(presence._users[2][0].socket.id, 3)
+    assert.lengthOf(presence._usersPool[1], 1)
+    assert.lengthOf(presence._usersPool[2], 1)
+    assert.equal(presence._usersPool[1][0].socket.id, 2)
+    assert.equal(presence._usersPool[2][0].socket.id, 3)
   })
 
   it('should be able to track a multiple sockets for a given user', function () {
@@ -59,9 +59,9 @@ describe('Presence', function () {
     }
     presence.track(socket, 1)
     presence.track(socket1, 1)
-    assert.lengthOf(presence._users[1], 2)
-    assert.equal(presence._users[1][0].socket.id, 2)
-    assert.equal(presence._users[1][1].socket.id, 3)
+    assert.lengthOf(presence._usersPool[1], 2)
+    assert.equal(presence._usersPool[1][0].socket.id, 2)
+    assert.equal(presence._usersPool[1][1].socket.id, 3)
   })
 
   it('should be able to pull certain sockets', function () {
@@ -78,7 +78,7 @@ describe('Presence', function () {
     presence.track(socket1, 1, {device: 'iphone'})
     const iphoneSocket = presence.pull(1, (item) => item.meta.device === 'iphone')
     assert.equal(iphoneSocket[0].socket.id, 3)
-    assert.lengthOf(presence._users[1], 1)
+    assert.lengthOf(presence._usersPool[1], 1)
   })
 
   it('should remove the socket from the list when disconnect event is triggered', function () {
@@ -97,7 +97,7 @@ describe('Presence', function () {
     presence.track(socket, 1, {device: 'chrome'})
     presence.track(socket1, 1, {device: 'iphone'})
     socket.cb()
-    assert.lengthOf(presence._users[1], 1)
+    assert.lengthOf(presence._usersPool[1], 1)
   })
 
   it('should publish presence as soon as a socket is tracked', function () {
@@ -207,5 +207,30 @@ describe('Presence', function () {
         }
       ]
     }])
+  })
+
+  it('should remove the user from the object when it is zero connected sockets', function () {
+    const presence = new Presence(io)
+    const socket = {
+      id: 2,
+      on: function () {}
+    }
+    presence.track(socket, 1)
+    assert.lengthOf(presence._usersPool[1], 1)
+    presence.pull(1, () => true)
+    assert.deepEqual(presence._usersPool, {})
+  })
+
+  it('should return an empty array when their is nothing to pull', function () {
+    const presence = new Presence(io)
+    const socket = {
+      id: 2,
+      on: function () {}
+    }
+    presence.track(socket, 1)
+    assert.lengthOf(presence._usersPool[1], 1)
+    presence.pull(1, () => true)
+    const pulledArray = presence.pull(1, () => true)
+    assert.deepEqual(pulledArray, [])
   })
 })
