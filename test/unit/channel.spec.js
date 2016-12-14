@@ -15,6 +15,7 @@ const socketio = require('socket.io')
 const assert = chai.assert
 const http = require('http')
 const Channel = require('../../src/Channel')
+const Presence = require('../../src/Presence')
 class Session {}
 
 class Request {}
@@ -1611,5 +1612,40 @@ describe('Channel', function () {
     let client = null
     client = wsClient.connect(socketUrl, options)
     client.disconnect()
+  })
+
+  it('should pass presence reference to the class instance', function (done) {
+    const server = http.createServer(function () {})
+
+    class ChannelController {
+      constructor (socket, request, presence) {
+        assert.instanceOf(presence, Presence)
+        server.close(done)
+        client.disconnect()
+      }
+    }
+
+    const io = socketio(server)
+    new Channel(io, Request, Session, '/', ChannelController)
+
+    server.listen(5000)
+
+    let client = null
+    client = wsClient.connect(socketUrl, options)
+  })
+
+  it('should pass presence reference to the channel closure', function (done) {
+    const server = http.createServer(function () {})
+
+    const io = socketio(server)
+    new Channel(io, Request, Session, '/', function (socket, request, presence) {
+      assert.instanceOf(presence, Presence)
+      server.close(done)
+      client.disconnect()
+    })
+
+    server.listen(5000)
+    let client = null
+    client = wsClient.connect(socketUrl, options)
   })
 })
