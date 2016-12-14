@@ -1439,4 +1439,177 @@ describe('Channel', function () {
       })
     })
   })
+
+  it('should be able to track sockets for a given channel', function (done) {
+    const server = http.createServer(function () {})
+    const io = socketio(server)
+
+    const channel = new Channel(io, Request, Session, '/', function (socket) {
+      channel.presence.track(socket, 1, {device: 'chrome'})
+    })
+
+    server.listen(5000)
+
+    let client = null
+    client = wsClient.connect(socketUrl, options)
+    client.on('presence:state', function (state) {
+      assert.deepEqual(state, [{
+        id: 1,
+        payload: [{
+          socketId: client.id,
+          meta: {device: 'chrome'}
+        }]
+      }])
+      server.close(done)
+      client.disconnect()
+    })
+  })
+
+  it('should be able to track multiple sockets for a multiple users', function (done) {
+    const server = http.createServer(function () {})
+    const io = socketio(server)
+
+    const channel = new Channel(io, Request, Session, '/', function (socket) {
+      channel.presence.track(socket, socket.id, {device: 'chrome'})
+    })
+
+    server.listen(5000)
+
+    let client = null
+    let client1 = null
+    let sequence = 0
+
+    client = wsClient.connect(socketUrl, options)
+    client1 = wsClient.connect(socketUrl, options)
+
+    client1.on('presence:state', function (state) {
+      sequence++
+      if (sequence === 1) {
+        assert.deepEqual(state, [{
+          id: client.id,
+          payload: [{
+            socketId: client.id,
+            meta: {device: 'chrome'}
+          }]
+        }, {
+          id: client1.id,
+          payload: [{
+            socketId: client1.id,
+            meta: {device: 'chrome'}
+          }]
+        }])
+        client.disconnect()
+        client1.disconnect()
+        server.close(done)
+      }
+    })
+  })
+
+  it('should publish presence when a tracked socket disconnects', function (done) {
+    const server = http.createServer(function () {})
+    const io = socketio(server)
+
+    const channel = new Channel(io, Request, Session, '/', function (socket) {
+      channel.presence.track(socket, 1, {device: 'chrome'})
+    })
+
+    server.listen(5000)
+
+    let client = null
+    let client1 = null
+    let sequence = 0
+
+    client = wsClient.connect(socketUrl, options)
+    client1 = wsClient.connect(socketUrl, options)
+
+    client1.on('presence:state', function (state) {
+      sequence++
+      if (sequence === 1) {
+        assert.deepEqual(state, [{
+          id: 1,
+          payload: [{
+            socketId: client.id,
+            meta: {device: 'chrome'}
+          }, {
+            socketId: client1.id,
+            meta: {device: 'chrome'}
+          }]
+        }])
+        assert.lengthOf(channel.presence._users['1'], 2)
+        client.disconnect()
+      } else {
+        assert.deepEqual(state, [{
+          id: 1,
+          payload: [{
+            socketId: client1.id,
+            meta: {device: 'chrome'}
+          }]
+        }])
+        assert.lengthOf(channel.presence._users['1'], 1)
+        client1.disconnect()
+        server.close(done)
+      }
+    })
+  })
+
+  it('should publish presence when a tracked is disconnected by pulling of the list', function (done) {
+    const server = http.createServer(function () {})
+    const io = socketio(server)
+
+    const channel = new Channel(io, Request, Session, '/', function (socket) {
+      channel.presence.track(socket, 1, {device: 'chrome'})
+    })
+
+    server.listen(5000)
+
+    let client = null
+    let client1 = null
+    let sequence = 0
+    let statePublishedCounts = 0
+
+    client = wsClient.connect(socketUrl, options)
+    client1 = wsClient.connect(socketUrl, options)
+    const handler = function () {
+      sequence++
+      if (sequence === 2) {
+        const firstClient = channel.presence.pull(1, function (item) {
+          return item.socket.id === client.id
+        })
+        firstClient[0].socket.disconnect()
+      }
+    }
+    client.on('connect', handler)
+    client1.on('connect', handler)
+    client1.on('presence:state', function (state) {
+      statePublishedCounts++
+      if (statePublishedCounts === 2) {
+        assert.deepEqual(state, [{
+          id: 1,
+          payload: [{
+            socketId: client1.id,
+            meta: {device: 'chrome'}
+          }]
+        }])
+        client1.disconnect()
+        server.close(done)
+      }
+    })
+  })
+
+  it('should not hijack the disconnected function on the channel when tracking a socket', function (done) {
+    const server = http.createServer(function () {})
+    const io = socketio(server)
+
+    const channel = new Channel(io, Request, Session, '/', function (socket) {
+      channel.presence.track(socket, 1, {device: 'chrome'})
+    }).disconnected(function () {
+      server.close(done)
+    })
+
+    server.listen(5000)
+
+    let client = null
+    client = wsClient.connect(socketUrl, options)
+    client.disconnect()
+  })
 })
