@@ -1,3 +1,18 @@
+<a name="1.0.2"></a>
+## [1.0.2](https://github.com/adonisjs/adonis-websocket/compare/v1.0.1...v1.0.2) (2016-12-16)
+
+
+### Bug Fixes
+
+* **channel:** fix emit to everyone ([589b23f](https://github.com/adonisjs/adonis-websocket/commit/589b23f))
+
+
+### Features
+
+* **presence:** add support for tracking sockets ([ebd9cae](https://github.com/adonisjs/adonis-websocket/commit/ebd9cae))
+
+
+
 <a name="1.0.1"></a>
 ## [1.0.1](https://github.com/adonisjs/adonis-websocket/compare/v1.0.0...v1.0.1) (2016-12-12)
 
