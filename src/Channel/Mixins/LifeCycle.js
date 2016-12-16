@@ -28,7 +28,7 @@ const LifeCycle = exports = module.exports = {}
  */
 LifeCycle._onConnection = function (ws) {
   const self = this
-  const closureInstance = new this._closure(ws.socket, ws.request)
+  const closureInstance = new this._closure(ws.socket, ws.request, this.presence)
   ws.socket.setParentContext(closureInstance)
 
   /**

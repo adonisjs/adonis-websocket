@@ -252,6 +252,10 @@ class AdonisSocket {
   leave (room) {
     this.socket.leave(room)
   }
+
+  disconnect () {
+    this.socket.disconnect()
+  }
 }
 
 module.exports = AdonisSocket

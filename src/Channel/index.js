@@ -13,6 +13,7 @@ const mixin = require('es6-class-mixin')
 const _ = require('lodash')
 const Mixins = require('./Mixins')
 const CE = require('../Exceptions')
+const Presence = require('../Presence')
 const util = require('../../lib/util')
 const Resetable = require('../../lib/Resetable')
 
@@ -20,6 +21,7 @@ class Channel {
 
   constructor (io, Request, Session, name, closure) {
     this.io = name === '/' ? io : io.of(name)
+    this.presence = new Presence(this.io)
 
     /**
      * A reference to the closure, it will be executed after
@@ -195,7 +197,7 @@ class Channel {
       return
     }
 
-    this.io.sockets.emit.apply(this.io.sockets, args)
+    this.io.emit.apply(this.io, args)
   }
 
   /**
@@ -220,6 +222,7 @@ class Channel {
       throw CE.InvalidArgumentException.invalidParameter('Make sure to pass a function for disconnected event')
     }
     this._disconnectedFn = util.wrapIfGenerator(fn)
+    return this
   }
 
   /**
