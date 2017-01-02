@@ -61,7 +61,7 @@ Setup process is done. Let's use the **Ws** provider now.
 <br>
 ## <a name="getting-started"></a>Getting Started
 
-Feel free to skip this section and read the [official documentation](http://adonisjs.com/docs/websockets), if you are on version `3.2` or later.
+Feel free to skip this section and read the [official documentation](http://adonisjs.com/docs/websocket), if you are on version `3.2` or later.
 
 If you are using older version of `adonis-app`. You are supposed to create couple of directories in order to setup the ecosystem.
 
@@ -81,7 +81,7 @@ Next we need to do is loading the `socket.js` file when starting the server. Whi
 use(Helpers.makeNameSpace('Ws', 'socket'))
 ```
 
-Next, read the [official documentation](http://adonisjs.com/docs/websockets) :book:
+Next, read the [official documentation](http://adonisjs.com/docs/websocket) :book:
 
 <br>
 ## <a name="contribution-guidelines"></a>Contribution Guidelines
