@@ -1,3 +1,15 @@
+<a name="1.0.3"></a>
+## [1.0.3](https://github.com/adonisjs/adonis-websocket/compare/v1.0.2...v1.0.3) (2017-02-25)
+
+
+### Bug Fixes
+
+* **links:** broken links for official docs ([2e0a5a0](https://github.com/adonisjs/adonis-websocket/commit/2e0a5a0))
+* **package:** update uws to version 0.13.0 ([#4](https://github.com/adonisjs/adonis-websocket/issues/4)) ([b320cf4](https://github.com/adonisjs/adonis-websocket/commit/b320cf4))
+* **ws:** make use of uws only when defined in config file ([4b8dc43](https://github.com/adonisjs/adonis-websocket/commit/4b8dc43)), closes [#3](https://github.com/adonisjs/adonis-websocket/issues/3)
+
+
+
 <a name="1.0.2"></a>
 ## [1.0.2](https://github.com/adonisjs/adonis-websocket/compare/v1.0.1...v1.0.2) (2016-12-16)
 

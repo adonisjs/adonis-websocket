@@ -1,6 +1,6 @@
 {
   "name": "adonis-websocket",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Adonisjs websockets support",
   "main": "index.js",
   "directories": {
