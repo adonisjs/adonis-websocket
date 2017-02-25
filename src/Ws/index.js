@@ -96,10 +96,12 @@ class Ws {
    */
   attach (server) {
     this.io = socketio(server)
-    this.io.ws = new (require('uws').Server)({
-      noServer: true,
-      perMessageDeflate: false
-    })
+    if (this.config.useUws) {
+      this.io.ws = new (require('uws').Server)({
+        noServer: true,
+        perMessageDeflate: false
+      })
+    }
   }
 
   /**

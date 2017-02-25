@@ -16,6 +16,7 @@ const Ioc = require('adonis-fold').Ioc
 const wsClient = require('socket.io-client')
 const Ws = require('../../src/Ws')
 const Channel = require('../../src/Channel')
+const uws = require('uws')
 class Session {}
 const Helpers = {
   makeNameSpace (namespace, controller) {
@@ -125,5 +126,27 @@ describe('Ws', function () {
     ws.channel('/', 'ChannelController')
     let client = null
     client = wsClient.connect(socketUrl, options)
+  })
+
+  it('should not make use of uws', function () {
+    Server.listen(5000)
+    const ws = new Ws(Config, Request, Server, Session)
+    assert.equal(ws.io.ws, undefined)
+    Server.getInstance().close()
+  })
+
+  it('should only make use of uws when defined inside the config file', function () {
+    Server.listen(5000)
+    const altConfig = {
+      get () {
+        return {
+          useHttpServer: true,
+          useUws: true
+        }
+      }
+    }
+    const ws = new Ws(altConfig, Request, Server, Session)
+    assert.instanceOf(ws.io.ws, uws.Server)
+    Server.getInstance().close()
   })
 })
