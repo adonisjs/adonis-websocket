@@ -10,5 +10,6 @@ module.exports = {
   | make sure to attach a custom http server using Ws.attach()
   |
   */
-  useHttpServer: true
+  useHttpServer: true,
+  useUws: false
 }
