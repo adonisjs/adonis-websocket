@@ -30,7 +30,7 @@
     "mocha-lcov-reporter": "^1.2.0",
     "sinon": "^1.17.6",
     "socket.io-client": "^1.5.1",
-    "standard": "^8.5.0"
+    "standard": "^9.0.2"
   },
   "config": {
     "commitizen": {
