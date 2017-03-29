@@ -1,3 +1,13 @@
+<a name="1.0.4"></a>
+## [1.0.4](https://github.com/adonisjs/adonis-websocket/compare/v1.0.3...v1.0.4) (2017-03-29)
+
+
+### Bug Fixes
+
+* **package:** update uws to version 0.14.0 ([#9](https://github.com/adonisjs/adonis-websocket/issues/9)) ([8820145](https://github.com/adonisjs/adonis-websocket/commit/8820145))
+
+
+
 <a name="1.0.3"></a>
 ## [1.0.3](https://github.com/adonisjs/adonis-websocket/compare/v1.0.2...v1.0.3) (2017-02-25)
 
