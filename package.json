@@ -1,6 +1,6 @@
 {
   "name": "adonis-websocket",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Adonisjs websockets support",
   "main": "index.js",
   "directories": {
@@ -53,7 +53,7 @@
     "lodash": "^4.17.2",
     "node-exceptions": "^1.0.3",
     "socket.io": "^1.5.1",
-    "uws": "^0.13.0"
+    "uws": "^0.14.0"
   },
   "repository": {
     "type": "git",
