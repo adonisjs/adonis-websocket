@@ -17,7 +17,7 @@
 </p>
 
 <br>
-Adonis Websocket is the official **websockets** provider for AdonisJs. It let you easily setup/authenticate channels and rooms with elegant syntax and power of ES2015 generators.:rocket:
+Adonis Websocket is the official **websockets** provider for AdonisJs. It lets you easily setup/authenticate channels and rooms with elegant syntax and power of ES2015 generators.:rocket:
 
 <br>
 <hr>
