@@ -47,7 +47,7 @@
   },
   "dependencies": {
     "co": "^4.6.0",
-    "co-compose": "^1.0.0",
+    "co-compose": "^2.0.1",
     "es6-class-mixin": "^1.0.5",
     "haye": "^1.0.1",
     "lodash": "^4.17.2",
