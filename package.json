@@ -52,6 +52,7 @@
     "haye": "^1.0.1",
     "lodash": "^4.17.2",
     "node-exceptions": "^1.0.3",
+    "resetable": "^1.0.1",
     "socket.io": "^1.5.1",
     "uws": "^0.14.0"
   },

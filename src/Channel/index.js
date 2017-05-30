@@ -15,10 +15,9 @@ const Mixins = require('./Mixins')
 const CE = require('../Exceptions')
 const Presence = require('../Presence')
 const util = require('../../lib/util')
-const Resetable = require('../../lib/Resetable')
+const Resetable = require('resetable')
 
 class Channel {
-
   constructor (io, Request, Session, name, closure) {
     this.io = name === '/' ? io : io.of(name)
     this.presence = new Presence(this.io)

@@ -12,7 +12,6 @@
 const ServiceProvider = require('adonis-fold').ServiceProvider
 
 class WsProvider extends ServiceProvider {
-
   * register () {
     this.app.singleton('Adonis/Addons/Ws', (app) => {
       const Ws = require('../src/Ws')
@@ -24,7 +23,6 @@ class WsProvider extends ServiceProvider {
       return new Ws(Config, Request, Server, Session, Helpers)
     })
   }
-
 }
 
 module.exports = WsProvider

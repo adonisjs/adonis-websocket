@@ -12,7 +12,6 @@
 const NE = require('node-exceptions')
 
 class RuntimeException extends NE.RuntimeException {
-
   /**
    * default error code to be used for raising
    * exceptions
@@ -64,7 +63,6 @@ class RuntimeException extends NE.RuntimeException {
 }
 
 class InvalidArgumentException extends NE.InvalidArgumentException {
-
   /**
    * default error code to be used for raising
    * exceptions

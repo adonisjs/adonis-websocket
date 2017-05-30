@@ -18,13 +18,14 @@ const defaultConfig = require('../../examples/config')
 const sessionMethodsToDisable = ['put', 'pull', 'flush', 'forget']
 
 class Ws {
-
   constructor (Config, Request, Server, Session, Helpers) {
     class WsSession extends Session {
     }
     this.config = Config.get('ws', defaultConfig)
     this.io = null
-    this.config.useHttpServer ? this.attach(Server.getInstance()) : null
+    if (this.config.useHttpServer) {
+      this.attach(Server.getInstance())
+    }
     this.Request = Request
     this.Session = WsSession
     this.Helpers = Helpers
@@ -121,7 +122,6 @@ class Ws {
   named (set) {
     Middleware.named(set)
   }
-
 }
 
 module.exports = Ws
