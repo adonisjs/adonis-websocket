@@ -28,7 +28,7 @@
     "istanbul": "^0.4.5",
     "mocha": "^3.1.2",
     "mocha-lcov-reporter": "^1.2.0",
-    "sinon": "^2.0.0",
+    "sinon": "^3.0.0",
     "socket.io-client": "^1.5.1",
     "standard": "^8.5.0"
   },
