@@ -30,7 +30,9 @@ Adonis Websocket is the official **websockets** provider for AdonisJs. It lets y
 * [Contribution Guidelines](#contribution-guidelines)
 
 <br>
-## <a name="requirements"></a>Setup
+
+## <a name="requirements" href="#setup"></a>Setup
+
 Follow the below instructions to setup this provider
 
 ### Install
@@ -59,7 +61,8 @@ const aliases = {
 Setup process is done. Let's use the **Ws** provider now.
 
 <br>
-## <a name="getting-started"></a>Getting Started
+
+## <a name="getting-started" href="#getting-started"></a> Getting Started
 
 Feel free to skip this section and read the [official documentation](http://adonisjs.com/docs/websocket), if you are on version `3.2` or later.
 
@@ -84,7 +87,8 @@ use(Helpers.makeNameSpace('Ws', 'socket'))
 Next, read the [official documentation](http://adonisjs.com/docs/websocket) :book:
 
 <br>
-## <a name="contribution-guidelines"></a>Contribution Guidelines
+
+## <a name="contribution-guidelines" href="#contribution-guidelines"></a>Contribution Guidelines
 
 In favor of active development we accept contributions from everyone. You can contribute by submitting a bug, creating pull requests or even improving documentation.
 
