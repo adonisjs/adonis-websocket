@@ -63,7 +63,7 @@ class Presence {
   publishPresence () {
     const publishPayload = _.map(this._usersPool, (users) => {
       return _.transform(users, (result, user) => {
-        result.id = result.id || user.userId // MAKING SURE WE ARE NOT MUTATING IT EVERTIME
+        result.id = result.id || user.userId // MAKING SURE WE ARE NOT MUTATING IT EVERYTIME
         result.payload.push({
           socketId: user.socket.id,
           meta: user.meta
