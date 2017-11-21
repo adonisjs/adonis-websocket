@@ -54,7 +54,7 @@
     "node-exceptions": "^1.0.3",
     "resetable": "^1.0.1",
     "socket.io": "^1.5.1",
-    "uws": "^0.14.0"
+    "uws": "^9.14.0"
   },
   "repository": {
     "type": "git",
