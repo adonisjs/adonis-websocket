@@ -26,7 +26,7 @@
     "coveralls": "^2.11.15",
     "cz-conventional-changelog": "^2.1.0",
     "istanbul": "^0.4.5",
-    "mocha": "^3.1.2",
+    "mocha": "^4.1.0",
     "mocha-lcov-reporter": "^1.2.0",
     "sinon": "^4.0.2",
     "socket.io-client": "^1.5.1",
