@@ -18,6 +18,7 @@ const co = require('co')
 const Socket = require('../../Socket')
 const Middleware = require('../../Middleware')
 const Response = require('../../Response')
+const debug = require('debug')('adonis:websocket')
 
 const Setup = exports = module.exports = {}
 
@@ -27,13 +28,8 @@ const Setup = exports = module.exports = {}
  */
 Setup._initiateSocket = function () {
   this.io.use((socket, next) => {
-    const request = new this.Request(socket.request, new Response())
-    const session = new this.Session(socket.request, new Response())
-    request.session = session
-    this._wsPool[socket.id] = {
-      socket: new Socket(this.io, socket),
-      request: request
-    }
+    const context = new this.Context(this.io, socket)
+    this._ctxPool[socket.id] = context
     next()
   })
 }
@@ -50,12 +46,16 @@ Setup._callCustomMiddleware = function () {
       return
     }
 
-    const ws = this.get(socket.id)
-    const composedFn = Middleware.compose(middlewareList, ws.socket, ws.request)
-    co(function * () {
-      yield composedFn()
+    const context = this.get(socket.id)
+    debug('context', 'have context');
+    const composedFn = Middleware.compose(middlewareList, context)
+    co(async function () {
+      await composedFn()
     })
     .then(() => next())
-    .catch(next)
+    .catch((error) => {
+      debug('error', error);
+      next(error);
+    })
   })
 }

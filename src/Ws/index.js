@@ -10,26 +10,25 @@
 */
 
 const socketio = require('socket.io')
-const Ioc = require('adonis-fold').Ioc
+const Ioc = require('@adonisjs/fold').ioc
 const Channel = require('../Channel')
 const Middleware = require('../Middleware')
 const CE = require('../Exceptions')
 const defaultConfig = require('../../examples/config')
-const sessionMethodsToDisable = ['put', 'pull', 'flush', 'forget']
 
 class Ws {
-  constructor (Config, Request, Server, Session, Helpers) {
-    class WsSession extends Session {
-    }
+  constructor (Config, Context, Server) {
     this.config = Config.get('ws', defaultConfig)
     this.io = null
     if (this.config.useHttpServer) {
       this.attach(Server.getInstance())
     }
-    this.Request = Request
-    this.Session = WsSession
-    this.Helpers = Helpers
-    this.controllersPath = 'Ws/Controllers'
+    this.Context = Context
+    // should update `Controllers/Ws`
+    this.controllersPath = 'App/Controllers/Ws'
+    if (this.config.controllersPath.trim() !== '') {
+      this.controllersPath = this.config.controllersPath.trim()
+    }
 
     /**
      * Channels pool to store channel instances. This is done
@@ -39,17 +38,6 @@ class Ws {
      */
     this._channelsPool = {}
 
-    /**
-     * Here we override methods on the session provider extended
-     * class to make sure the end user is not mutating the
-     * session state, since we do not have access to the
-     * response object.
-     */
-    sessionMethodsToDisable.forEach((method) => {
-      this.Session.prototype[method] = function () {
-        throw CE.RuntimeException.invalidAction('Cannot mutate session values during websocket request')
-      }
-    })
   }
 
   /**
@@ -69,7 +57,7 @@ class Ws {
      * controllers.
      */
     if (typeof (closure) === 'string') {
-      closure = Ioc.use(this.Helpers.makeNameSpace(this.controllersPath, closure))
+      closure = Ioc.use(`${this.controllersPath}/${closure}`)
     }
 
     /**
@@ -85,7 +73,7 @@ class Ws {
       return channel
     }
 
-    this._channelsPool[name] = this._channelsPool[name] || new Channel(this.io, this.Request, this.Session, name, closure)
+    this._channelsPool[name] = this._channelsPool[name] || new Channel(this.io, this.Context, name, closure)
     return this._channelsPool[name]
   }
 

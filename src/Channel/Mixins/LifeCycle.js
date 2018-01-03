@@ -24,33 +24,33 @@ const LifeCycle = exports = module.exports = {}
  * channel closure and pass around the socket and the
  * request to the constructor.
  *
- * @param  {Object} ws
+ * @param  {Object} context
  */
-LifeCycle._onConnection = function (ws) {
+LifeCycle._onConnection = function (context) {
   const self = this
-  const closureInstance = new this._closure(ws.socket, ws.request, this.presence)
-  ws.socket.setParentContext(closureInstance)
+  const closureInstance = new this._closure(context, this.presence)
+  context.socket.setParentContext(closureInstance)
 
   /**
    * Hooking into disconnected method and clearing off the socket
    * from the wsPool. Also calling the custom disconnected method.
    */
-  ws.socket.on('disconnect', () => this._onDisconnect(ws))
+  context.socket.on('disconnect', () => this._onDisconnect(context))
 
   /**
    * Hooking into join:ad:room event and following a better
    * join room approach
    */
-  ws.socket.on('join:ad:room', function * (payload, fn) {
-    yield self._onJoinRoom(ws.socket, ws.request, payload, fn)
+  context.socket.on('join:ad:room', async function (payload, fn) {
+    await self._onJoinRoom(context, payload, fn)
   })
 
   /**
    * Hooking into leave:ad:room event and following a better
    * leave room approach
    */
-  ws.socket.on('leave:ad:room', function * (payload, fn) {
-    yield self._onLeaveRoom(ws.socket, ws.request, payload, fn)
+  context.socket.on('leave:ad:room', async function (payload, fn) {
+    await self._onLeaveRoom(context, payload, fn)
   })
 
   /**
@@ -60,7 +60,7 @@ LifeCycle._onConnection = function (ws) {
    */
   if (this._closureIsAClass) {
     const methods = Object.getOwnPropertyNames(this._closure.prototype)
-    methods.forEach((method) => this._bindEventListener(closureInstance, ws.socket, method))
+    methods.forEach((method) => this._bindEventListener(closureInstance, context.socket, method))
   }
 }
 
@@ -69,11 +69,11 @@ LifeCycle._onConnection = function (ws) {
  * and it also calls the disconnect method of the
  * channel if defined.
  *
- * @param  {Object} ws
+ * @param  {Object} context
  */
-LifeCycle._onDisconnect = function (ws) {
-  this._wsPool[ws.socket.id] = null
-  this._disconnectedFn(ws.socket)
+LifeCycle._onDisconnect = function (context) {
+  this._ctxPool[context.socket.id] = null
+  this._disconnectedFn(context.socket)
 }
 
 /**
