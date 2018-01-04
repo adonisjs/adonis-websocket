@@ -10,7 +10,7 @@
 */
 
 const socketio = require('socket.io')
-const Ioc = require('@adonisjs/fold').ioc
+const { resolver, ioc } = require('@adonisjs/fold')
 const Channel = require('../Channel')
 const Middleware = require('../Middleware')
 const CE = require('../Exceptions')
@@ -24,11 +24,6 @@ class Ws {
       this.attach(Server.getInstance())
     }
     this.Context = Context
-    // should update `Controllers/Ws`
-    this.controllersPath = 'App/Controllers/Ws'
-    if (this.config.controllersPath.trim() !== '') {
-      this.controllersPath = this.config.controllersPath.trim()
-    }
 
     /**
      * Channels pool to store channel instances. This is done
@@ -57,7 +52,7 @@ class Ws {
      * controllers.
      */
     if (typeof (closure) === 'string') {
-      closure = Ioc.use(`${this.controllersPath}/${closure}`)
+      closure = ioc.use(resolver.forDir('wsControllers').translate(closure))
     }
 
     /**

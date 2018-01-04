@@ -15,7 +15,7 @@ const { Ignitor } = require('@adonisjs/ignitor')
 class WsProvider extends Fold.ServiceProvider {
 
   _registerWsContext() {
-    this.app.bind('Adonis/Addons/WsContext', (app) => {
+    this.app.bind('Adonis/Addons/WsContext', () => {
       return require('../src/Context')
     })
     this.app.alias('Adonis/Src/WsContext', 'WsContext')
@@ -32,13 +32,13 @@ class WsProvider extends Fold.ServiceProvider {
   }
 
   _registerMiddleware() {
-    this.app.bind('Adonis/Middleware/AuthInitWs', (app) => {
-      const AuthInitWs =  require('../src/Middleware/AuthInitWs');
-      return new AuthInitWs();
+    this.app.bind('Adonis/Middleware/AuthInitWs', () => {
+      const AuthInitWs =  require('../src/Middleware/AuthInitWs')
+      return new AuthInitWs()
     })
-    this.app.bind('Adonis/Middleware/AuthWs', (app) => {
-      const AuthWs =  require('../src/Middleware/AuthWs');
-      return new AuthWs();
+    this.app.bind('Adonis/Middleware/AuthWs', () => {
+      const AuthWs =  require('../src/Middleware/AuthWs')
+      return new AuthWs()
     })
   }
 
@@ -62,13 +62,12 @@ class WsProvider extends Fold.ServiceProvider {
    * @return {void}
    */
   boot () {
-    this._registerMiddleware();
+    this._registerMiddleware()
     this._registerFileSocket()
     const Context = this.app.use('Adonis/Addons/WsContext')
     const Auth = this.app.use('Adonis/Src/Auth')
     const Config = this.app.use('Adonis/Src/Config')
     const Request = this.app.use('Adonis/Src/Request')
-    const Session = this.app.use('Adonis/Traits/Session')
     const SessionManager = this.app.use('Adonis/Src/Session')
     const Response = require('../src/Response')
 
@@ -88,7 +87,7 @@ class WsProvider extends Fold.ServiceProvider {
      * for fetching or setting data.
      */
     Context.getter('session', function () {
-      return require('@adonisjs/session/src/Session/getRequestInstance')(this.request, this.response, Config, SessionManager)
+      return require('@adonisjs/session/src/Session/getRequestInstance')(this.request, new Response(), Config, SessionManager)
     }, true)
 
     Context.getter('auth', function () {

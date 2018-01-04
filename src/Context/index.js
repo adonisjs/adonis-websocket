@@ -22,7 +22,7 @@ const Macroable = require('macroable')
  * @constructor
  *
  */
-const Socket = require('../Socket');
+const Socket = require('../Socket')
 
 class WsContext extends Macroable {
   constructor (io, socket) {
@@ -54,7 +54,7 @@ class WsContext extends Macroable {
      *
      * @type {Object}
      */
-    this.socket  = new Socket(io, socket);
+    this.socket  = new Socket(io, socket)
 
     this.constructor._readyFns
       .filter((fn) => typeof (fn) === 'function')
