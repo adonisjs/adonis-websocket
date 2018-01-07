@@ -801,14 +801,14 @@ describe('Channel', function () {
       client.disconnect()
     })
 
-    channel.middleware(async function ({ socket, request }, next) {
+    channel.middleware(function ({ socket, request }, next) {
       middlewareCalls.push(1)
-      await next()
+      next()
     })
 
-    channel.middleware(async function ({ socket, request }, next) {
+    channel.middleware(function ({ socket, request }, next) {
       middlewareCalls.push(2)
-      await next()
+      next()
     })
 
     server.listen(5000)
