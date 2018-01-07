@@ -16,11 +16,25 @@ const assert = chai.assert
 const http = require('http')
 const Channel = require('../../src/Channel')
 const Presence = require('../../src/Presence')
+const Context = require('../../src/Context')
+
 class Session {}
-
 class Request {}
+class Auth {}
 
-const socketUrl = 'http://0.0.0.0:5000'
+Context.getter('request', function () {
+  return new Request()
+}, true)
+
+Context.getter('session', function () {
+  return new Session()
+}, true)
+
+Context.getter('auth', function () {
+  return new Auth()
+}, true)
+
+const socketUrl = 'http://127.0.0.1:5000'
 const options = {
   transports: ['websocket'],
   'force new connection': true
@@ -32,7 +46,7 @@ describe('Channel', function () {
     const io = socketio(server)
 
     /* eslint no-new: "off" */
-    new Channel(io, Request, Session, '/', function () {
+    new Channel(io, Context, '/', function () {
       server.close(done)
       client.disconnect()
     })
@@ -47,9 +61,9 @@ describe('Channel', function () {
     const server = http.createServer(function () {})
     const io = socketio(server)
 
-    new Channel(io, Request, Session, '/', function (socket) {
-      assert.equal(socket.socket.connected, true)
-      assert.equal(socket.socket.nsp.name, '/')
+    new Channel(io, Context, '/', function (context) {
+      assert.equal(context.socket.socket.connected, true)
+      assert.equal(context.socket.socket.nsp.name, '/')
       server.close(done)
       client.disconnect()
     })
@@ -64,7 +78,7 @@ describe('Channel', function () {
     const server = http.createServer(function () {})
     const io = socketio(server)
     try {
-      const channel = new Channel(io, Request, Session, '/', function () {}).disconnected()
+      const channel = new Channel(io, Context, '/', function () {}).disconnected()
       assert.equal(channel, undefined)
     } catch (e) {
       assert.equal(e.message, 'E_INVALID_PARAMETER: Make sure to pass a function for disconnected event')
@@ -75,8 +89,8 @@ describe('Channel', function () {
     const server = http.createServer(function () {})
     const io = socketio(server)
 
-    new Channel(io, Request, Session, '/', function () {})
-    .disconnected(function (socket) {
+    new Channel(io, Context, '/', function () {})
+    .disconnected(function (context) {
       server.close(done)
     })
 
@@ -92,8 +106,8 @@ describe('Channel', function () {
     const server = http.createServer(function () {})
     const io = socketio(server)
 
-    new Channel(io, Request, Session, '/', function () {})
-    .disconnected(function * (socket) {
+    new Channel(io, Context, '/', function () {})
+    .disconnected(function ({ socket }) {
       server.close(done)
     })
 
@@ -108,7 +122,7 @@ describe('Channel', function () {
     const server = http.createServer(function () {})
     const io = socketio(server)
 
-    new Channel(io, Request, Session, '/', function (socket) {
+    new Channel(io, Context, '/', function ({ socket }) {
       socket.on('greet', (username) => {
         assert.equal(username, 'virk')
         server.close(done)
@@ -134,7 +148,7 @@ describe('Channel', function () {
     }
 
     const io = socketio(server)
-    new Channel(io, Request, Session, '/', ChannelController)
+    new Channel(io, Context, '/', ChannelController)
 
     server.listen(5000)
 
@@ -146,7 +160,7 @@ describe('Channel', function () {
     const server = http.createServer(function () {})
 
     class ChannelController {
-      constructor (socket) {
+      constructor ({ socket }) {
         assert.equal(socket.socket.connected, true)
         server.close(done)
         client.disconnect()
@@ -154,7 +168,7 @@ describe('Channel', function () {
     }
 
     const io = socketio(server)
-    new Channel(io, Request, Session, '/', ChannelController)
+    new Channel(io, Context, '/', ChannelController)
 
     server.listen(5000)
 
@@ -166,7 +180,7 @@ describe('Channel', function () {
     const server = http.createServer(function () {})
 
     class ChannelController {
-      constructor (socket) {
+      constructor ({ socket }) {
         this.socket = socket
         contollerInstances.push(this)
         if (contollerInstances.length === 2) {
@@ -180,7 +194,7 @@ describe('Channel', function () {
     }
 
     const io = socketio(server)
-    new Channel(io, Request, Session, '/', ChannelController)
+    new Channel(io, Context, '/', ChannelController)
 
     server.listen(5000)
 
@@ -195,7 +209,7 @@ describe('Channel', function () {
     const server = http.createServer(function () {})
     const io = socketio(server)
 
-    new Channel(io, Request, Session, '/', function (socket) {
+    new Channel(io, Context, '/', function ({ socket }) {
       socket.toEveryone().emit('greet', 'virk')
     })
 
@@ -214,7 +228,7 @@ describe('Channel', function () {
     const server = http.createServer(function () {})
     const io = socketio(server)
 
-    new Channel(io, Request, Session, '/chat', function (socket) {
+    new Channel(io, Context, '/chat', function ({ socket }) {
       socket.toEveryone().emit('greet', 'virk')
     })
 
@@ -233,7 +247,7 @@ describe('Channel', function () {
     const server = http.createServer(function () {})
     const io = socketio(server)
 
-    new Channel(io, Request, Session, '/', function (socket) {
+    new Channel(io, Context, '/', function ({ socket }) {
       socket.on('fire', function () {
         socket.toEveryone().emit('greet', 'virk')
       })
@@ -265,7 +279,7 @@ describe('Channel', function () {
     const server = http.createServer(function () {})
 
     const io = socketio(server)
-    new Channel(io, Request, Session, '/', function (socket) {
+    new Channel(io, Context, '/', function ({ socket }) {
       socket.exceptMe().emit('greet', 'virk')
     })
 
@@ -290,7 +304,7 @@ describe('Channel', function () {
     const server = http.createServer(function () {})
 
     const io = socketio(server)
-    new Channel(io, Request, Session, '/chat', function (socket) {
+    new Channel(io, Context, '/chat', function ({ socket }) {
       socket.exceptMe().emit('greet', 'virk')
     })
 
@@ -315,8 +329,8 @@ describe('Channel', function () {
     const server = http.createServer(function () {})
 
     const io = socketio(server)
-    new Channel(io, Request, Session, '/', function (socket) {
-      socket.on('greet', function * (username) {
+    new Channel(io, Context, '/', function ({ socket }) {
+      socket.on('greet', function (username) {
         assert.equal(username, 'virk')
         server.close(done)
         client.disconnect()
@@ -334,7 +348,7 @@ describe('Channel', function () {
     const server = http.createServer(function () {})
 
     const io = socketio(server)
-    new Channel(io, Request, Session, '/', function (socket) {
+    new Channel(io, Context, '/', function ({ socket }) {
       socket.on('ready', function () {
         socket.toMe().emit('shout', socket.socket.id)
       })
@@ -378,8 +392,9 @@ describe('Channel', function () {
     const server = http.createServer(function () {})
 
     const io = socketio(server)
-    new Channel(io, Request, Session, '/chat', function (socket) {
+    new Channel(io, Context, '/chat', function ({ socket }) {
       socket.on('ready', function () {
+        console.log('ready')
         socket.toMe().emit('shout', socket.socket.id)
       })
     })
@@ -422,12 +437,12 @@ describe('Channel', function () {
     const server = http.createServer(function () {})
 
     const io = socketio(server)
-    new Channel(io, Request, Session, '/', function (socket) {
+    new Channel(io, Context, '/', function ({ socket }) {
       socket.on('ready', function (ids) {
         socket.to(ids).emit('shout', {from: socket.socket.id, to: ids})
       })
     })
-    .disconnected(function (socket) {
+    .disconnected(function ({ socket }) {
       disconnectedCounts++
       if (eventsCount === 2 && disconnectedCounts === 2) {
         client.disconnect()
@@ -479,12 +494,12 @@ describe('Channel', function () {
     const server = http.createServer(function () {})
 
     const io = socketio(server)
-    new Channel(io, Request, Session, '/chat', function (socket) {
+    new Channel(io, Context, '/chat', function ({ socket }) {
       socket.on('ready', function (ids) {
         socket.to(ids).emit('shout', {from: socket.socket.id, to: ids})
       })
     })
-    .disconnected(function (socket) {
+    .disconnected(function ({ socket }) {
       disconnectedCounts++
       if (eventsCount === 2 && disconnectedCounts === 2) {
         client.disconnect()
@@ -543,7 +558,7 @@ describe('Channel', function () {
     }
 
     const io = socketio(server)
-    new Channel(io, Request, Session, '/', MyChannel)
+    new Channel(io, Context, '/', MyChannel)
 
     server.listen(5000)
 
@@ -564,7 +579,7 @@ describe('Channel', function () {
     }
 
     const io = socketio(server)
-    new Channel(io, Request, Session, '/', MyChannel)
+    new Channel(io, Context, '/', MyChannel)
 
     server.listen(5000)
 
@@ -578,7 +593,7 @@ describe('Channel', function () {
     const server = http.createServer(function () {})
 
     const io = socketio(server)
-    const channel = new Channel(io, Request, Session, '/', function () {})
+    const channel = new Channel(io, Context, '/', function () {})
 
     channel.disconnected(function () {
       disconnectedCounts++
@@ -615,7 +630,7 @@ describe('Channel', function () {
     const server = http.createServer(function () {})
 
     const io = socketio(server)
-    const channel = new Channel(io, Request, Session, '/chat', function () {})
+    const channel = new Channel(io, Context, '/chat', function () {})
 
     channel.disconnected(function () {
       disconnectedCounts++
@@ -652,9 +667,9 @@ describe('Channel', function () {
     const server = http.createServer(function () {})
 
     const io = socketio(server)
-    const channel = new Channel(io, Request, Session, '/', function () {})
+    const channel = new Channel(io, Context, '/', function () {})
 
-    channel.disconnected(function (socket) {
+    channel.disconnected(function ({ socket }) {
       disconnectedCounts++
       if (eventsCount === 2 && disconnectedCounts === 2) {
         client.disconnect()
@@ -706,9 +721,9 @@ describe('Channel', function () {
     const server = http.createServer(function () {})
 
     const io = socketio(server)
-    const channel = new Channel(io, Request, Session, '/chat', function () {})
+    const channel = new Channel(io, Context, '/chat', function () {})
 
-    channel.disconnected(function (socket) {
+    channel.disconnected(function ({ socket }) {
       disconnectedCounts++
       if (eventsCount === 2 && disconnectedCounts === 2) {
         client.disconnect()
@@ -760,7 +775,7 @@ describe('Channel', function () {
     const server = http.createServer(function (req, res) {})
 
     const io = socketio(server)
-    const channel = new Channel(io, Request, Session, '/', function () {})
+    const channel = new Channel(io, Context, '/', function () {})
 
     server.listen(5000)
 
@@ -780,20 +795,20 @@ describe('Channel', function () {
     const middlewareCalls = []
     let client = null
 
-    const channel = new Channel(io, Request, Session, '/', function (socket) {
+    const channel = new Channel(io, Context, '/', function ({ socket }) {
       assert.deepEqual(middlewareCalls, [1, 2])
       server.close(done)
       client.disconnect()
     })
 
-    channel.middleware(function * (socket, request, next) {
+    channel.middleware(function ({ socket, request }, next) {
       middlewareCalls.push(1)
-      yield next
+      next()
     })
 
-    channel.middleware(function * (socket, request, next) {
+    channel.middleware(function ({ socket, request }, next) {
       middlewareCalls.push(2)
-      yield next
+      next()
     })
 
     server.listen(5000)
@@ -805,7 +820,7 @@ describe('Channel', function () {
     const io = socketio(server)
 
     /* eslint no-new: "off" */
-    new Channel(io, Request, Session, '/foo', function () {
+    new Channel(io, Context, '/foo', function () {
       server.close(done)
       client.disconnect()
     })
@@ -820,8 +835,8 @@ describe('Channel', function () {
     const server = http.createServer(function (req, res) {})
 
     const io = socketio(server)
-    const channel = new Channel(io, Request, Session, '/', function () {})
-    channel.joinRoom(function (room, body, socket) {
+    const channel = new Channel(io, Context, '/', function () {})
+    channel.joinRoom(function ({ socket }, { room, body }) {
       assert.equal(room, 'lobby')
       assert.equal(socket.id, body.id)
       setTimeout(function () {
@@ -844,7 +859,7 @@ describe('Channel', function () {
     const server = http.createServer(function (req, res) {})
     const io = socketio(server)
     try {
-      const channel = new Channel(io, Request, Session, '/', function () {})
+      const channel = new Channel(io, Context, '/', function () {})
       channel.joinRoom()
     } catch (e) {
       assert.equal(e.message, 'E_INVALID_PARAMETER: Make sure to pass a function for joinRoom event')
@@ -855,8 +870,8 @@ describe('Channel', function () {
     const server = http.createServer(function (req, res) {})
 
     const io = socketio(server)
-    const channel = new Channel(io, Request, Session, '/', function () {})
-    channel.joinRoom(function * (room, body, socket) {
+    const channel = new Channel(io, Context, '/', function () {})
+    channel.joinRoom(function ({ socket }, { room, body }) {
       assert.equal(room, 'lobby')
       assert.equal(socket.id, body.id)
       setTimeout(function () {
@@ -879,7 +894,7 @@ describe('Channel', function () {
     const server = http.createServer(function (req, res) {})
 
     const io = socketio(server)
-    new Channel(io, Request, Session, '/', function () {})
+    new Channel(io, Context, '/', function () {})
 
     server.listen(5000)
 
@@ -900,7 +915,7 @@ describe('Channel', function () {
     const server = http.createServer(function (req, res) {})
 
     const io = socketio(server)
-    const channel = new Channel(io, Request, Session, '/', function () {})
+    const channel = new Channel(io, Context, '/', function () {})
     channel.joinRoom(() => {
       throw new Error('Cannot make you join the room')
     })
@@ -923,8 +938,8 @@ describe('Channel', function () {
     const server = http.createServer(function (req, res) {})
 
     const io = socketio(server)
-    const channel = new Channel(io, Request, Session, '/', function () {})
-    channel.joinRoom(function * () {
+    const channel = new Channel(io, Context, '/', function () {})
+    channel.joinRoom(function () {
       throw new Error('Cannot make you join the room')
     })
 
@@ -946,8 +961,8 @@ describe('Channel', function () {
     const server = http.createServer(function (req, res) {})
 
     const io = socketio(server)
-    const channel = new Channel(io, Request, Session, '/', function () {})
-    channel.leaveRoom(function (room, body, socket) {
+    const channel = new Channel(io, Context, '/', function () {})
+    channel.leaveRoom(function ({ socket }, { room, body }) {
       assert.equal(room, 'lobby')
       assert.equal(socket.id, body.id)
       assert.equal(socket.rooms.lobby, 'lobby')
@@ -973,8 +988,8 @@ describe('Channel', function () {
     const server = http.createServer(function (req, res) {})
 
     const io = socketio(server)
-    const channel = new Channel(io, Request, Session, '/', function () {})
-    channel.leaveRoom(function * (room, body, socket) {
+    const channel = new Channel(io, Context, '/', function () {})
+    channel.leaveRoom(function ({ socket }, { room, body }) {
       assert.equal(room, 'lobby')
       assert.equal(socket.id, body.id)
       assert.equal(socket.rooms.lobby, 'lobby')
@@ -1000,8 +1015,8 @@ describe('Channel', function () {
     const server = http.createServer(function (req, res) {})
 
     const io = socketio(server)
-    const channel = new Channel(io, Request, Session, '/', function () {})
-    channel.leaveRoom(function * (room, body, socket) {
+    const channel = new Channel(io, Context, '/', function () {})
+    channel.leaveRoom(function ({ socket }, { room, body }) {
       assert.equal(socket.rooms.lobby, 'lobby')
       throw new Error('Cannot leave room')
     })
@@ -1026,7 +1041,7 @@ describe('Channel', function () {
     const server = http.createServer(function (req, res) {})
     const io = socketio(server)
     try {
-      const channel = new Channel(io, Request, Session, '/', function () {})
+      const channel = new Channel(io, Context, '/', function () {})
       channel.leaveRoom()
     } catch (e) {
       assert.equal(e.message, 'E_INVALID_PARAMETER: Make sure to pass a function for leaveRoom event')
@@ -1038,7 +1053,7 @@ describe('Channel', function () {
 
     const io = socketio(server)
     class ChannelController {
-      joinRoom (room, body, socket) {
+      joinRoom ({ socket }, { room, body }) {
         assert.equal(room, 'lobby')
         assert.equal(socket.id, body.id)
         setTimeout(function () {
@@ -1048,7 +1063,7 @@ describe('Channel', function () {
         })
       }
     }
-    new Channel(io, Request, Session, '/', ChannelController)
+    new Channel(io, Context, '/', ChannelController)
     server.listen(5000)
 
     let client = null
@@ -1063,7 +1078,7 @@ describe('Channel', function () {
 
     const io = socketio(server)
     class ChannelController {
-      * joinRoom (room, body, socket) {
+      * joinRoom ({ socket }, { room, body }) {
         assert.equal(room, 'lobby')
         assert.equal(socket.id, body.id)
         setTimeout(function () {
@@ -1073,7 +1088,7 @@ describe('Channel', function () {
         })
       }
     }
-    new Channel(io, Request, Session, '/', ChannelController)
+    new Channel(io, Context, '/', ChannelController)
     server.listen(5000)
 
     let client = null
@@ -1089,7 +1104,7 @@ describe('Channel', function () {
     const io = socketio(server)
 
     class ChannelController {
-      leaveRoom (room, body, socket) {
+      leaveRoom ({ socket }, { room, body }) {
         assert.equal(room, 'lobby')
         assert.equal(socket.id, body.id)
         assert.equal(socket.rooms.lobby, 'lobby')
@@ -1101,7 +1116,7 @@ describe('Channel', function () {
       }
     }
 
-    new Channel(io, Request, Session, '/', ChannelController)
+    new Channel(io, Context, '/', ChannelController)
     server.listen(5000)
 
     let client = null
@@ -1120,7 +1135,7 @@ describe('Channel', function () {
     let disconnectCount = 0
 
     class ChannelController {
-      constructor (socket) {
+      constructor ({ socket }) {
         this.socket = socket
       }
 
@@ -1138,7 +1153,7 @@ describe('Channel', function () {
       }
     }
 
-    new Channel(io, Request, Session, '/', ChannelController)
+    new Channel(io, Context, '/', ChannelController)
     server.listen(5000)
 
     let client = null
@@ -1172,7 +1187,7 @@ describe('Channel', function () {
     const io = socketio(server)
 
     class ChannelController {
-      constructor (socket) {
+      constructor ({ socket }) {
         this.socket = socket
       }
 
@@ -1187,7 +1202,7 @@ describe('Channel', function () {
       }
     }
 
-    new Channel(io, Request, Session, '/', ChannelController)
+    new Channel(io, Context, '/', ChannelController)
     server.listen(5000)
 
     let client = null
@@ -1204,7 +1219,7 @@ describe('Channel', function () {
     const io = socketio(server)
 
     class ChannelController {
-      constructor (socket) {
+      constructor ({ socket }) {
         this.socket = socket
       }
 
@@ -1219,7 +1234,7 @@ describe('Channel', function () {
       }
     }
 
-    new Channel(io, Request, Session, '/', ChannelController)
+    new Channel(io, Context, '/', ChannelController)
     server.listen(5000)
 
     let client = null
@@ -1238,7 +1253,7 @@ describe('Channel', function () {
     let disconnectCount = 0
 
     class ChannelController {
-      constructor (socket) {
+      constructor ({ socket }) {
         this.socket = socket
       }
 
@@ -1255,7 +1270,7 @@ describe('Channel', function () {
       }
     }
 
-    new Channel(io, Request, Session, '/', ChannelController)
+    new Channel(io, Context, '/', ChannelController)
     server.listen(5000)
 
     let client = null
@@ -1294,7 +1309,7 @@ describe('Channel', function () {
     let disconnectCount = 0
 
     class ChannelController {
-      constructor (socket) {
+      constructor ({ socket }) {
         this.socket = socket
       }
 
@@ -1311,7 +1326,7 @@ describe('Channel', function () {
       }
     }
 
-    new Channel(io, Request, Session, '/', ChannelController)
+    new Channel(io, Context, '/', ChannelController)
     server.listen(5000)
 
     let client = null
@@ -1347,7 +1362,7 @@ describe('Channel', function () {
     let grettingReceivedCounts = 0
     let disconnectCount = 0
 
-    const channel = new Channel(io, Request, Session, '/', function (socket) {
+    const channel = new Channel(io, Context, '/', function ({ socket }) {
       socket.on('ready', function () {
         channel.inRoom('lobby').emit('greeting', 'Hello world')
       })
@@ -1398,7 +1413,7 @@ describe('Channel', function () {
     let grettingReceivedCounts = 0
     let disconnectCount = 0
 
-    const channel = new Channel(io, Request, Session, '/', function (socket) {
+    const channel = new Channel(io, Context, '/', function ({ socket }) {
       socket.on('ready', function () {
         channel.inRooms(['lobby']).emit('greeting', 'Hello world')
       })
@@ -1445,7 +1460,7 @@ describe('Channel', function () {
     const server = http.createServer(function () {})
     const io = socketio(server)
 
-    const channel = new Channel(io, Request, Session, '/', function (socket) {
+    const channel = new Channel(io, Context, '/', function ({ socket }) {
       channel.presence.track(socket, 1, {device: 'chrome'})
     })
 
@@ -1470,7 +1485,7 @@ describe('Channel', function () {
     const server = http.createServer(function () {})
     const io = socketio(server)
 
-    const channel = new Channel(io, Request, Session, '/', function (socket) {
+    const channel = new Channel(io, Context, '/', function ({ socket }) {
       channel.presence.track(socket, socket.id, {device: 'chrome'})
     })
 
@@ -1510,7 +1525,7 @@ describe('Channel', function () {
     const server = http.createServer(function () {})
     const io = socketio(server)
 
-    const channel = new Channel(io, Request, Session, '/', function (socket) {
+    const channel = new Channel(io, Context, '/', function ({ socket }) {
       channel.presence.track(socket, 1, {device: 'chrome'})
     })
 
@@ -1557,7 +1572,7 @@ describe('Channel', function () {
     const server = http.createServer(function () {})
     const io = socketio(server)
 
-    const channel = new Channel(io, Request, Session, '/', function (socket) {
+    const channel = new Channel(io, Context, '/', function ({ socket }) {
       channel.presence.track(socket, 1, {device: 'chrome'})
     })
 
@@ -1601,7 +1616,7 @@ describe('Channel', function () {
     const server = http.createServer(function () {})
     const io = socketio(server)
 
-    const channel = new Channel(io, Request, Session, '/', function (socket) {
+    const channel = new Channel(io, Context, '/', function ({ socket }) {
       channel.presence.track(socket, 1, {device: 'chrome'})
     }).disconnected(function () {
       server.close(done)
@@ -1618,7 +1633,7 @@ describe('Channel', function () {
     const server = http.createServer(function () {})
 
     class ChannelController {
-      constructor (socket, request, presence) {
+      constructor ({ socket, request }, presence) {
         assert.instanceOf(presence, Presence)
         server.close(done)
         client.disconnect()
@@ -1626,7 +1641,7 @@ describe('Channel', function () {
     }
 
     const io = socketio(server)
-    new Channel(io, Request, Session, '/', ChannelController)
+    new Channel(io, Context, '/', ChannelController)
 
     server.listen(5000)
 
@@ -1638,7 +1653,7 @@ describe('Channel', function () {
     const server = http.createServer(function () {})
 
     const io = socketio(server)
-    new Channel(io, Request, Session, '/', function (socket, request, presence) {
+    new Channel(io, Context, '/', function ({ socket, request }, presence) {
       assert.instanceOf(presence, Presence)
       server.close(done)
       client.disconnect()

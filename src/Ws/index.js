@@ -10,26 +10,20 @@
 */
 
 const socketio = require('socket.io')
-const Ioc = require('adonis-fold').Ioc
+const { resolver, ioc } = require('@adonisjs/fold')
 const Channel = require('../Channel')
 const Middleware = require('../Middleware')
 const CE = require('../Exceptions')
 const defaultConfig = require('../../examples/config')
-const sessionMethodsToDisable = ['put', 'pull', 'flush', 'forget']
 
 class Ws {
-  constructor (Config, Request, Server, Session, Helpers) {
-    class WsSession extends Session {
-    }
+  constructor (Config, Context, Server) {
     this.config = Config.get('ws', defaultConfig)
     this.io = null
     if (this.config.useHttpServer) {
       this.attach(Server.getInstance())
     }
-    this.Request = Request
-    this.Session = WsSession
-    this.Helpers = Helpers
-    this.controllersPath = 'Ws/Controllers'
+    this.Context = Context
 
     /**
      * Channels pool to store channel instances. This is done
@@ -38,18 +32,6 @@ class Ws {
      * @type {Object}
      */
     this._channelsPool = {}
-
-    /**
-     * Here we override methods on the session provider extended
-     * class to make sure the end user is not mutating the
-     * session state, since we do not have access to the
-     * response object.
-     */
-    sessionMethodsToDisable.forEach((method) => {
-      this.Session.prototype[method] = function () {
-        throw CE.RuntimeException.invalidAction('Cannot mutate session values during websocket request')
-      }
-    })
   }
 
   /**
@@ -69,7 +51,7 @@ class Ws {
      * controllers.
      */
     if (typeof (closure) === 'string') {
-      closure = Ioc.use(this.Helpers.makeNameSpace(this.controllersPath, closure))
+      closure = ioc.use(resolver.forDir('wsControllers').translate(closure))
     }
 
     /**
@@ -85,7 +67,7 @@ class Ws {
       return channel
     }
 
-    this._channelsPool[name] = this._channelsPool[name] || new Channel(this.io, this.Request, this.Session, name, closure)
+    this._channelsPool[name] = this._channelsPool[name] || new Channel(this.io, this.Context, name, closure)
     return this._channelsPool[name]
   }
 
@@ -96,13 +78,11 @@ class Ws {
    * @param {Object} server
    */
   attach (server) {
-    this.io = socketio(server)
+    let option = {}
     if (this.config.useUws) {
-      this.io.ws = new (require('uws').Server)({
-        noServer: true,
-        perMessageDeflate: false
-      })
+      option = { wsEngine: 'uws' }
     }
+    this.io = socketio(server, option)
   }
 
   /**

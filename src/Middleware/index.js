@@ -10,7 +10,7 @@
 */
 
 const CoCompose = require('co-compose')
-const Ioc = require('adonis-fold').Ioc
+const { resolver } = require('@adonisjs/fold')
 const haye = require('haye')
 const _ = require('lodash')
 const CE = require('../Exceptions')
@@ -95,27 +95,32 @@ Middleware.resolve = function (namedList) {
   }))
 }
 
+const getHandler = function (iocNamespace) {
+  return typeof (iocNamespace) === 'function' ? iocNamespace : `${iocNamespace}.wsHandle`
+}
+
 /**
  * Compose middleware to be executed. Here we have all the custom
  * logic to call the middleware fn.
  *
  * @param  {Array} list
- * @param  {Object} socket
- * @param  {Object} request
+ * @param  {Object} context
  *
  * @return {function}
  */
-Middleware.compose = function (list, socket, request) {
+Middleware.compose = function (list, context) {
   return store
-    .withParams(socket, request)
-    .resolve(function (middleware, params) {
+    .runner(list)
+    .withParams([context])
+    .resolve(function (middleware, context) {
       if (middleware.isFunction) {
-        return middleware.namespace.apply(null, params)
+        return middleware.namespace.apply(null, context)  // eslint-disable-line
       }
       const iocNamespace = middleware.namespace ? middleware.namespace : middleware
       const args = middleware.args || []
-      const middlewareInstance = Ioc.make(iocNamespace)
-      return middlewareInstance.handleWs.apply(middlewareInstance, params.concat(args))
+      const handler = getHandler(iocNamespace)
+      const handlerInstance = resolver.resolveFunc(handler)
+      return handlerInstance.method(...context.concat(args)) // eslint-disable-line
     })
-    .compose(list)
+    .compose()
 }

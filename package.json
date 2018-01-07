@@ -8,7 +8,7 @@
     "test": "test"
   },
   "scripts": {
-    "test": "npm run lint && istanbul cover _mocha --report lcovonly test/unit/*.spec.js && cat ./coverage/lcov.info | coveralls && rm -rf ./coverage",
+    "test": "npm run lint && node_modules/.bin/istanbul cover node_modules/mocha/bin/_mocha --report lcovonly test/unit/*.spec.js && cat ./coverage/lcov.info | coveralls && rm -rf ./coverage",
     "coverage": "istanbul cover _mocha test/unit/*.spec.js",
     "lint": "standard"
   },
@@ -18,14 +18,14 @@
     "websockets",
     "socketio"
   ],
-  "author": "adonisjs,amanvirk",
+  "author": "adonisjs,amanvirk,norton",
   "license": "MIT",
   "devDependencies": {
-    "adonis-fold": "^3.0.3",
+    "@adonisjs/fold": "^4.0.5",
     "chai": "^3.5.0",
     "coveralls": "^2.11.15",
     "cz-conventional-changelog": "^2.1.0",
-    "istanbul": "^0.4.5",
+    "istanbul": "^1.0.0-alpha.2",
     "mocha": "^3.1.2",
     "mocha-lcov-reporter": "^1.2.0",
     "sinon": "^4.0.2",
@@ -40,6 +40,7 @@
   "standard": {
     "global": [
       "it",
+      "use",
       "should",
       "describe",
       "beforeEach"
@@ -47,14 +48,15 @@
   },
   "dependencies": {
     "co": "^4.6.0",
-    "co-compose": "^1.0.0",
+    "co-compose": "^3.0.0",
     "es6-class-mixin": "^1.0.5",
     "haye": "^1.0.1",
     "lodash": "^4.17.2",
+    "macroable": "^1.0.0",
     "node-exceptions": "^1.0.3",
     "resetable": "^1.0.1",
     "socket.io": "^1.5.1",
-    "uws": "^0.14.0"
+    "uws": "^9.14.0"
   },
   "repository": {
     "type": "git",
