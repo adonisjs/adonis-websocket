@@ -32,7 +32,6 @@ class Ws {
      * @type {Object}
      */
     this._channelsPool = {}
-
   }
 
   /**
@@ -79,13 +78,11 @@ class Ws {
    * @param {Object} server
    */
   attach (server) {
-    this.io = socketio(server)
+    let option = {}
     if (this.config.useUws) {
-      this.io.ws = new (require('uws').Server)({
-        noServer: true,
-        perMessageDeflate: false
-      })
+      option = { wsEngine: 'uws' }
     }
+    this.io = socketio(server, option)
   }
 
   /**

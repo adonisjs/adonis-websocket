@@ -11,9 +11,14 @@
 
 const chai = require('chai')
 const assert = chai.assert
-const Ioc = require('adonis-fold').Ioc
+const { resolver, ioc: Ioc } = require('@adonisjs/fold')
 const co = require('co')
 const Middleware = require('../../src/Middleware')
+
+resolver.directories({
+  wsControllers: 'Controllers/Ws'
+})
+resolver.appNamespace('App')
 
 describe('Middleware', function () {
   beforeEach(function () {
@@ -81,17 +86,17 @@ describe('Middleware', function () {
 
   it('should compose and run middleware via constructing them properly', function (done) {
     class AuthInit {
-      * handleWs (socket, request, next) {
+      async wsHandle ({ socket, request }, next) {
         request.count++
-        yield next
+        await next()
       }
     }
 
     class Auth {
-      * handleWs (socket, request, next, scheme) {
+      async wsHandle ({ socket, request }, next, scheme) {
         request.count++
         request.scheme = scheme
-        yield next
+        await next()
       }
     }
 
@@ -112,9 +117,9 @@ describe('Middleware', function () {
     const resolved = Middleware.resolve(['auth:basic'], true)
     const socket = {}
     const request = {count: 0}
-    const composed = Middleware.compose(resolved, socket, request)
-    co(function * () {
-      yield composed()
+    const composed = Middleware.compose(resolved, { socket, request })
+    co(async function () {
+      await composed()
     }).then(() => {
       assert.equal(request.count, 2)
       assert.equal(request.scheme, 'basic')

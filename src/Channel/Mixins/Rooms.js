@@ -26,7 +26,7 @@ const Rooms = exports = module.exports = {}
  * @param  {Object}    payload
  * @param  {Function}  [callback]
  */
-Rooms._onJoinRoom = async function ( context, payload, callback) {
+Rooms._onJoinRoom = async function (context, payload, callback) {
   callback = callback || function () {}
   const roomJoinFn = this._roomJoinFn
   try {

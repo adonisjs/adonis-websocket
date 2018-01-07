@@ -2,7 +2,7 @@
 
 const Base = use('Adonis/Middleware/AuthInit')
 
-class AuthInitWs  {
+class AuthInitWs {
   //eslint-disable-next-line
   async wsHandle (context, next) {
     // call next to advance the request

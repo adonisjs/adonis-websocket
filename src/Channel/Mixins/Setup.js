@@ -15,9 +15,7 @@
  */
 
 const co = require('co')
-const Socket = require('../../Socket')
 const Middleware = require('../../Middleware')
-const Response = require('../../Response')
 const debug = require('debug')('adonis:websocket')
 
 const Setup = exports = module.exports = {}
@@ -47,15 +45,15 @@ Setup._callCustomMiddleware = function () {
     }
 
     const context = this.get(socket.id)
-    debug('context', 'have context');
+    debug('context', 'have context')
     const composedFn = Middleware.compose(middlewareList, context)
     co(async function () {
       await composedFn()
     })
     .then(() => next())
     .catch((error) => {
-      debug('error', error);
-      next(error);
+      debug('error', error)
+      next(error)
     })
   })
 }

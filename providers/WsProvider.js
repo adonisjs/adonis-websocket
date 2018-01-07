@@ -13,15 +13,14 @@ const Fold = require('@adonisjs/fold')
 const { Ignitor } = require('@adonisjs/ignitor')
 
 class WsProvider extends Fold.ServiceProvider {
-
-  _registerWsContext() {
+  _registerWsContext () {
     this.app.bind('Adonis/Addons/WsContext', () => {
       return require('../src/Context')
     })
     this.app.alias('Adonis/Src/WsContext', 'WsContext')
   }
 
-  _registerWs() {
+  _registerWs () {
     this.app.singleton('Adonis/Addons/Ws', (app) => {
       const Ws = require('../src/Ws')
       const Config = app.use('Adonis/Src/Config')
@@ -31,18 +30,18 @@ class WsProvider extends Fold.ServiceProvider {
     })
   }
 
-  _registerMiddleware() {
+  _registerMiddleware () {
     this.app.bind('Adonis/Middleware/AuthInitWs', () => {
-      const AuthInitWs =  require('../src/Middleware/AuthInitWs')
+      const AuthInitWs = require('../src/Middleware/AuthInitWs')
       return new AuthInitWs()
     })
     this.app.bind('Adonis/Middleware/AuthWs', () => {
-      const AuthWs =  require('../src/Middleware/AuthWs')
+      const AuthWs = require('../src/Middleware/AuthWs')
       return new AuthWs()
     })
   }
 
-  _registerFileSocket(){
+  _registerFileSocket () {
     new Ignitor(require('@adonisjs/fold'))
       .preLoad('start/ws')
       .preLoad('start/socket')
@@ -93,7 +92,6 @@ class WsProvider extends Fold.ServiceProvider {
     Context.getter('auth', function () {
       return new Auth({ request: this.request, session: this.session }, Config)
     }, true)
-
   }
 }
 

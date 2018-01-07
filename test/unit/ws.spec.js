@@ -12,19 +12,29 @@
 const chai = require('chai')
 const assert = chai.assert
 const http = require('http')
-const Ioc = require('adonis-fold').Ioc
+const { resolver, ioc: Ioc } = require('@adonisjs/fold')
 const wsClient = require('socket.io-client')
 const Ws = require('../../src/Ws')
 const Channel = require('../../src/Channel')
-const uws = require('uws')
-class Session {}
-const Helpers = {
-  makeNameSpace (namespace, controller) {
-    return `${namespace}/${controller}`
-  }
-}
+const Context = require('../../src/Context')
 
-const socketUrl = 'http://0.0.0.0:5000'
+class Session {}
+class Request {}
+class Auth {}
+
+Context.getter('request', function () {
+  return new Request()
+}, true)
+
+Context.getter('session', function () {
+  return new Session()
+}, true)
+
+Context.getter('auth', function () {
+  return new Auth()
+}, true)
+
+const socketUrl = 'http://127.0.0.1:5000'
 const options = {
   transports: ['websocket'],
   'force new connection': true
@@ -48,12 +58,10 @@ const Server = {
   }
 }
 
-class Request {}
-
 describe('Ws', function () {
   it('should be able to create a new channel using channel method', function () {
     Server.listen(5000)
-    const ws = new Ws(Config, Request, Server, Session)
+    const ws = new Ws(Config, Context, Server)
     const channel = ws.channel('/', function () {})
     assert.instanceOf(channel, Channel)
     Server.getInstance().close()
@@ -61,7 +69,7 @@ describe('Ws', function () {
 
   it('should return the same channel instance when channel is called serveral times', function () {
     Server.listen(5000)
-    const ws = new Ws(Config, Request, Server, Session)
+    const ws = new Ws(Config, Context, Server)
     const channel = ws.channel('/', function () {})
     const channel1 = ws.channel('/', function () {})
     assert.instanceOf(channel, Channel)
@@ -72,7 +80,7 @@ describe('Ws', function () {
 
   it('should return the channel instance when closure is not passed to the channel method', function () {
     Server.listen(5000)
-    const ws = new Ws(Config, Request, Server, Session)
+    const ws = new Ws(Config, Context, Server)
     ws.channel('/', function () {})
     const channel = ws.channel('/')
     assert.instanceOf(channel, Channel)
@@ -80,7 +88,7 @@ describe('Ws', function () {
   })
 
   it('should throw exception when trying to get undefined channel', function () {
-    const ws = new Ws(Config, Request, Server, Session)
+    const ws = new Ws(Config, Context, Server)
     const channel = () => ws.channel('/')
     assert.throw(channel, 'RuntimeException: E_UNINITIALIZED_METHOD: Trying to access uninitialized channel /')
   })
@@ -92,61 +100,31 @@ describe('Ws', function () {
           useHttpServer: false
         }
       }
-    }, Request, Server, Session)
+    }, Context, Server)
     assert.equal(ws.io, null)
     const server = http.createServer(function () {})
     ws.attach(server)
     assert.isObject(ws.io.nsps)
   })
 
-  it('should throw exception when trying to channel one of the restricted methods on request session', function (done) {
-    Server.listen(5000)
-    const ws = new Ws(Config, Request, Server, Session)
-    ws.channel('/', function (socket, request) {
-      assert.throw(request.session.put, 'Cannot mutate session values during websocket request')
-      client.disconnect()
-      Server.getInstance().close(done)
-    })
-    let client = null
-    client = wsClient.connect(socketUrl, options)
-  })
-
   it('should return the ioc binding when channel closure is a string', function (done) {
     Server.listen(5000)
-    Ioc.bind('Ws/Controllers/ChannelController', function () {
+    resolver.directories({
+      wsControllers: 'Controllers/Ws'
+    })
+    resolver.appNamespace('App')
+    Ioc.bind('App/Controllers/Ws/ChannelController', function () {
       class ChannelController {
-        constructor () {
+        constructor ({ socket }) {
           client.disconnect()
           Server.getInstance().close(done)
         }
       }
       return ChannelController
     })
-    const ws = new Ws(Config, Request, Server, Session, Helpers)
+    const ws = new Ws(Config, Context, Server)
     ws.channel('/', 'ChannelController')
     let client = null
     client = wsClient.connect(socketUrl, options)
-  })
-
-  it('should not make use of uws', function () {
-    Server.listen(5000)
-    const ws = new Ws(Config, Request, Server, Session)
-    assert.equal(ws.io.ws, undefined)
-    Server.getInstance().close()
-  })
-
-  it('should only make use of uws when defined inside the config file', function () {
-    Server.listen(5000)
-    const altConfig = {
-      get () {
-        return {
-          useHttpServer: true,
-          useUws: true
-        }
-      }
-    }
-    const ws = new Ws(altConfig, Request, Server, Session)
-    assert.instanceOf(ws.io.ws, uws.Server)
-    Server.getInstance().close()
   })
 })

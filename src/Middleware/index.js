@@ -95,7 +95,7 @@ Middleware.resolve = function (namedList) {
   }))
 }
 
-Middleware.getHandler = function(iocNamespace) {
+const getHandler = function (iocNamespace) {
   return typeof (iocNamespace) === 'function' ? iocNamespace : `${iocNamespace}.wsHandle`
 }
 
@@ -112,15 +112,15 @@ Middleware.compose = function (list, context) {
   return store
     .runner(list)
     .withParams([context])
-    .resolve(async function (middleware, context) {
+    .resolve(function (middleware, context) {
       if (middleware.isFunction) {
-        return await middleware.namespace.apply(null, context)
+        return middleware.namespace.apply(null, context)  // eslint-disable-line
       }
       const iocNamespace = middleware.namespace ? middleware.namespace : middleware
       const args = middleware.args || []
-      const handler = this.getHandler(iocNamespace)
+      const handler = getHandler(iocNamespace)
       const handlerInstance = resolver.resolveFunc(handler)
-      return await handlerInstance.method(...context.concat(args))
+      return handlerInstance.method(...context.concat(args)) // eslint-disable-line
     })
     .compose()
 }
