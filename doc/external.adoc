@@ -1,0 +1,18 @@
+= Websocket
+
+=== Always rely on websocket connection and do not make use of long-polling etc.
+This makes it easier to scale using Node.js cluster module and distribute load on multiple servers, without implimenting sticky sessions.
+
+Whereas, with long-polling, we need to make sure right request goes to right node when upgrading to Websocket connection, which is impossible with cluster module.
+
+=== Middleware on handshake
+All of the middleware will be executed on handshake, which keeps sockets layer clean, since once you are connected, you are safe.
+
+=== Open packet
+Server will emit open packet, sharing important info like `pingInterval`, `pingTimeout` etc.
+
+=== Ping/Pong
+Server and client both needs to play ping/pong. If no ping received from client during defined `pingInterval`, the connection will be closed from the server.
+
+=== Client closing connection
+Client can close connection by sending `close` event, optionally with `code` and `status` message. Client will receive the `close` event back in return.

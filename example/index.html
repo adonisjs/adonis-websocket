@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title></title>
+</head>
+<body>
+  <script type="text/javascript" src="https://rawgit.com/kawanet/msgpack-lite/master/dist/msgpack.min.js"></script>
+  <script type="text/javascript">
+const client = new window.WebSocket('ws://localhost:3000/adonis-ws')
+
+client.onerror = function (event) {
+  console.log(event)
+}
+
+client.onmessage = function (packet) {
+  var arrayBuffer
+  var fileReader = new window.FileReader()
+
+  fileReader.onload = function () {
+    arrayBuffer = this.result
+  }
+
+  fileReader.onloadend = function () {
+    console.log(window.msgpack.decode(new Uint8Array(arrayBuffer)))
+    setTimeout(() => {
+      client.send(window.msgpack.encode({ event: 'close' }))
+    }, 2000)
+  }
+  fileReader.readAsArrayBuffer(packet.data)
+}
+
+client.onopen = function (event) {
+  console.log('open')
+}
+  </script>
+</body>
+</html>
