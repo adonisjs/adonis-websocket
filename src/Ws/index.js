@@ -27,7 +27,7 @@ const ChannelManager = require('../Channel/Manager')
  */
 class Ws {
   constructor (Config) {
-    this._options = Config.merge('app.ws', {
+    this._options = Config.merge('socket', {
       path: '/adonis-ws',
       serverInterval: 30000,
       serverAttempts: 3,
@@ -153,6 +153,7 @@ class Ws {
    */
   handle (ws, req) {
     const connection = new Connection(ws, req, this._encoder)
+
     connection.on('close', (__connection__) => {
       this._connections.delete(__connection__)
     })
@@ -179,6 +180,11 @@ class Ws {
    */
   listen (server) {
     this._wsServer = new WebSocket.Server(Object.assign({}, this._serverOptions, { server }))
+
+    /**
+     * Make cluster hop to listen for new messages on
+     * process.
+     */
     ClusterHop.init()
 
     /**
