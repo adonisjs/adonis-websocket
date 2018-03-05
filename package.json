@@ -27,7 +27,7 @@
   "dependencies": {
     "@adonisjs/generic-exceptions": "^2.0.0",
     "@adonisjs/msgpack-encoder": "^1.0.3",
-    "@adonisjs/websocket-packet": "^1.0.1",
+    "@adonisjs/websocket-packet": "^1.0.3",
     "co-compose": "^4.0.0",
     "cuid": "^2.1.0",
     "debug": "^3.1.0",
