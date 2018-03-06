@@ -4,7 +4,11 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "japa"
+    "lint": "standard",
+    "pretest": "npm run lint",
+    "posttest": "nyc report --reporter=text-lcov | coveralls",
+    "test": "nyc japa",
+    "test:win": "node ./node_modules/japa-cli/index.js"
   },
   "keywords": [
     "adonisjs",
@@ -18,6 +22,7 @@
     "@adonisjs/fold": "^4.0.7",
     "@adonisjs/framework": "^5.0.4",
     "@adonisjs/sink": "^1.0.16",
+    "coveralls": "^3.0.0",
     "cz-conventional-changelog": "^2.1.0",
     "japa": "^1.0.6",
     "japa-cli": "^1.0.1",
