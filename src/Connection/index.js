@@ -85,11 +85,12 @@ class Connection extends Emittery {
      * Added as a listener to `onclose` event of the subscription.
      */
     this.deleteSubscription = function ({ topic }) {
+      debug('removed subscription for %s topic', topic)
       this._subscriptions.delete(topic)
     }.bind(this)
 
     /**
-     * The number of time ping check has been done. This
+     * The number of times ping check has been done. This
      * counter will reset, anytime client will ping
      * or send any sort of frames.
      *
@@ -498,10 +499,7 @@ class Connection extends Emittery {
    */
   closeSubscription (subscription) {
     if (subscription) {
-      debug('removed subscription for %s topic', subscription.topic)
-      subscription.off('close', this.deleteSubscription)
       subscription.serverClose()
-      this._subscriptions.delete(subscription.topic)
     }
   }
 

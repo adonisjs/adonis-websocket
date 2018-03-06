@@ -137,7 +137,7 @@ class Socket {
         return
       }
       this.channel.broadcast(this.topic, payload, [this.id])
-      ClusterHop.send(this.topic, payload)
+      ClusterHop.send('broadcast', this.topic, payload)
     })
   }
 
@@ -164,7 +164,7 @@ class Socket {
         return
       }
       this.channel.broadcast(this.topic, payload, [])
-      ClusterHop.send(this.topic, payload)
+      ClusterHop.send('broadcast', this.topic, payload)
     })
   }
 

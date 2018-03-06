@@ -9,7 +9,7 @@
  * file that was distributed with this source code.
 */
 
-const { ServiceProvider } = require.main.require('@adonisjs/fold')
+const { ServiceProvider } = require('@adonisjs/fold')
 
 class WsProvider extends ServiceProvider {
   /**

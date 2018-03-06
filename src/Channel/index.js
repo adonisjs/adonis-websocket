@@ -11,6 +11,7 @@
 
 const GE = require('@adonisjs/generic-exceptions')
 const Middleware = require('co-compose')
+const debug = require('debug')('adonis:websocket')
 
 /**
  * Channel class gives a simple way to divide the application
@@ -52,6 +53,7 @@ class Channel {
     this.deleteSubscription = function (subscription) {
       const topic = this.subscriptions.get(subscription.topic)
       if (topic) {
+        debug('removing channel subscription for %s topic', subscription.topic)
         topic.delete(subscription)
       }
     }.bind(this)
@@ -137,6 +139,7 @@ class Channel {
      * Add new subscription to existing subscriptions
      */
     subscriptions.add(context.socket)
+    debug('adding channel subscription for %s topic', context.socket.topic)
 
     /**
      * Add reference of channel to the subscription

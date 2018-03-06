@@ -28,9 +28,8 @@ function deliverMessage (handle, topic, payload) {
   if (handle === 'broadcast') {
     const channel = ChannelsManager.resolve(topic)
     if (!channel) {
-      return debug('broadcast packet must have a topic')
+      return debug('broadcast topic %s cannot be handled by any channel', topic)
     }
-
     channel.clusterMessage(topic, payload)
   }
 

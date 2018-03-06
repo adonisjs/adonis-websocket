@@ -32,7 +32,8 @@ class Ws {
       serverInterval: 30000,
       serverAttempts: 3,
       clientInterval: 25000,
-      clientAttempts: 3
+      clientAttempts: 3,
+      allowNoChannels: false
     })
 
     /**
@@ -111,6 +112,43 @@ class Ws {
   }
 
   /**
+   * The heart bear timer is required to monitor the health
+   * of connections.
+   *
+   * Server will create only one timer for all the connections.
+   *
+   * @method _registerTimer
+   *
+   * @return {void}
+   *
+   * @private
+   */
+  _registerTimer () {
+    this._heartBeatTimer = setInterval(() => {
+      this._connections.forEach((connection) => {
+        if (connection.pingElapsed >= this._options.serverAttempts) {
+          connection.terminate('ping elapsed')
+        } else {
+          connection.pingElapsed++
+        }
+      })
+    }, this._options.serverInterval)
+  }
+
+  /**
+   * Clearing the timer when server closes
+   *
+   * @method _clearTimer
+   *
+   * @return {void}
+   *
+   * @private
+   */
+  _clearTimer () {
+    clearInterval(this._heartBeatTimer)
+  }
+
+  /**
    * Bind a single function to validate the handshakes
    *
    * @method onHandshake
@@ -154,10 +192,18 @@ class Ws {
   handle (ws, req) {
     const connection = new Connection(ws, req, this._encoder)
 
+    /**
+     * Important to leave the connection instance, when it closes to
+     * avoid memory leaks.
+     */
     connection.on('close', (__connection__) => {
       this._connections.delete(__connection__)
     })
 
+    /**
+     * Open packet is an acknowledgement to the client that server is
+     * ready to accept subscriptions
+     */
     connection.sendOpenPacket({
       connId: connection.id,
       serverInterval: this._options.serverInterval,
@@ -182,28 +228,12 @@ class Ws {
     this._wsServer = new WebSocket.Server(Object.assign({}, this._serverOptions, { server }))
 
     /**
-     * Make cluster hop to listen for new messages on
-     * process.
-     */
-    ClusterHop.init()
-
-    /**
      * Listening for new connections
      */
     this._wsServer.on('connection', this.handle.bind(this))
 
-    /**
-     * Monitoring connections
-     */
-    this._heartBeatTimer = setInterval(() => {
-      this._connections.forEach((connection) => {
-        if (connection.pingElapsed >= this._options.serverAttempts) {
-          connection.terminate()
-        } else {
-          connection.pingElapsed++
-        }
-      })
-    }, this._options.serverInterval)
+    this._registerTimer()
+    ClusterHop.init()
   }
 
   /**
@@ -220,7 +250,7 @@ class Ws {
     if (this._wsServer) {
       this._connections.forEach((connection) => connection.terminate('closing server'))
       this._wsServer.close()
-      clearInterval(this._heartBeatTimer)
+      this._clearTimer()
     }
   }
 }
