@@ -11,11 +11,10 @@
 
 const WebSocket = require('ws')
 const GE = require('@adonisjs/generic-exceptions')
-const MsgPack = require('@adonisjs/msgpack-encoder')
-
 const Connection = require('../Connection')
 const ClusterHop = require('../ClusterHop')
 const ChannelManager = require('../Channel/Manager')
+const JsonEncoder = require('../JsonEncoder')
 
 /**
  * The websocket server is a wrapper over `ws` node library and
@@ -33,7 +32,8 @@ class Ws {
       serverAttempts: 3,
       clientInterval: 25000,
       clientAttempts: 3,
-      allowNoChannels: false
+      allowNoChannels: false,
+      encoder: JsonEncoder
     })
 
     /**
@@ -67,7 +67,7 @@ class Ws {
      *
      * @type {Encoders}
      */
-    this._encoder = this._options.encoder || new MsgPack()
+    this._encoder = this._options.encoder
 
     /**
      * Tracking all the connections, this is required to play

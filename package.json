@@ -26,13 +26,11 @@
     "cz-conventional-changelog": "^2.1.0",
     "japa": "^1.0.6",
     "japa-cli": "^1.0.1",
-    "msgpack-lite": "^0.1.26",
     "nyc": "^11.4.1",
     "standard": "^11.0.0"
   },
   "dependencies": {
     "@adonisjs/generic-exceptions": "^2.0.0",
-    "@adonisjs/msgpack-encoder": "^1.0.3",
     "@adonisjs/websocket-packet": "^1.0.4",
     "co-compose": "^4.0.0",
     "cuid": "^2.1.0",

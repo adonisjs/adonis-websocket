@@ -11,7 +11,6 @@
 
 const test = require('japa')
 const { ioc } = require('@adonisjs/fold')
-const msgpack = require('msgpack-lite')
 const msp = require('@adonisjs/websocket-packet')
 
 const setup = require('./setup')
@@ -47,7 +46,7 @@ test.group('Ws', (group) => {
     const client = helpers.startClient({}, '/adonis-ws')
     client.on('message', (payload) => {
       done(() => {
-        const actualPacket = msgpack.decode(payload)
+        const actualPacket = JSON.parse(payload)
 
         assert.deepEqual(actualPacket, {
           t: msp.codes.OPEN,
@@ -67,7 +66,7 @@ test.group('Ws', (group) => {
     const client = helpers.startClient({}, '/adonis-ws')
 
     client.on('message', (payload) => {
-      const actualPacket = msgpack.decode(payload)
+      const actualPacket = JSON.parse(payload)
 
       if (actualPacket.t === msp.codes.JOIN_ERROR) {
         done(() => {
@@ -78,7 +77,7 @@ test.group('Ws', (group) => {
     })
 
     client.on('open', () => {
-      client.send(msgpack.encode(msp.joinPacket('chat')))
+      client.send(JSON.stringify(msp.joinPacket('chat')))
     })
   })
 
@@ -86,7 +85,7 @@ test.group('Ws', (group) => {
     const client = helpers.startClient({}, '/adonis-ws')
 
     client.on('message', (payload) => {
-      const actualPacket = msgpack.decode(payload)
+      const actualPacket = JSON.parse(payload)
 
       if (actualPacket.t === msp.codes.JOIN_ERROR) {
         done(() => {
@@ -97,7 +96,7 @@ test.group('Ws', (group) => {
     })
 
     client.on('open', () => {
-      client.send(msgpack.encode({ t: msp.codes.JOIN, d: {} }))
+      client.send(JSON.stringify({ t: msp.codes.JOIN, d: {} }))
     })
   })
 
@@ -110,7 +109,7 @@ test.group('Ws', (group) => {
     })
 
     client.on('message', (payload) => {
-      const actualPacket = msgpack.decode(payload)
+      const actualPacket = JSON.parse(payload)
 
       if (actualPacket.t === msp.codes.JOIN_ACK) {
         done(() => {
@@ -122,7 +121,7 @@ test.group('Ws', (group) => {
     })
 
     client.on('open', () => {
-      client.send(msgpack.encode(msp.joinPacket('chat')))
+      client.send(JSON.stringify(msp.joinPacket('chat')))
     })
   })
 
@@ -135,7 +134,7 @@ test.group('Ws', (group) => {
     })
 
     client.on('message', (payload) => {
-      const actualPacket = msgpack.decode(payload)
+      const actualPacket = JSON.parse(payload)
       if (actualPacket.t === msp.codes.JOIN_ERROR) {
         done(() => {
           const expectedPacket = msp.joinErrorPacket('chat', 'Cannot join the same topic twice')
@@ -146,8 +145,8 @@ test.group('Ws', (group) => {
     })
 
     client.on('open', () => {
-      client.send(msgpack.encode(msp.joinPacket('chat')))
-      client.send(msgpack.encode(msp.joinPacket('chat')))
+      client.send(JSON.stringify(msp.joinPacket('chat')))
+      client.send(JSON.stringify(msp.joinPacket('chat')))
     })
   })
 
@@ -160,7 +159,7 @@ test.group('Ws', (group) => {
     })
 
     const handleMessage = function (payload) {
-      const packet = msgpack.decode(payload)
+      const packet = JSON.parse(payload)
       if (packet.t === msp.codes.OPEN) {
         return
       }
@@ -183,11 +182,11 @@ test.group('Ws', (group) => {
     client1.on('message', handleMessage)
 
     client.on('open', () => {
-      client.send(msgpack.encode(msp.joinPacket('chat')))
+      client.send(JSON.stringify(msp.joinPacket('chat')))
     })
 
     client1.on('open', () => {
-      client1.send(msgpack.encode(msp.joinPacket('chat')))
+      client1.send(JSON.stringify(msp.joinPacket('chat')))
     })
   })
 
@@ -201,7 +200,7 @@ test.group('Ws', (group) => {
 
     const client = helpers.startClient({}, '/adonis-ws')
     client.on('message', (payload) => {
-      const packet = msgpack.decode(payload)
+      const packet = JSON.parse(payload)
       if (packet.t === msp.codes.OPEN) {
         return
       }
@@ -230,8 +229,8 @@ test.group('Ws', (group) => {
     })
 
     client.on('open', () => {
-      client.send(msgpack.encode(msp.joinPacket('chat:watercooler')))
-      client.send(msgpack.encode(msp.joinPacket('chat:frontend')))
+      client.send(JSON.stringify(msp.joinPacket('chat:watercooler')))
+      client.send(JSON.stringify(msp.joinPacket('chat:frontend')))
     })
   })
 
@@ -245,7 +244,7 @@ test.group('Ws', (group) => {
 
     const client = helpers.startClient({}, '/adonis-ws')
     client.on('message', (payload) => {
-      const packet = msgpack.decode(payload)
+      const packet = JSON.parse(payload)
       if (packet.t === msp.codes.OPEN) {
         return
       }
@@ -270,8 +269,8 @@ test.group('Ws', (group) => {
     })
 
     client.on('open', () => {
-      client.send(msgpack.encode(msp.joinPacket('chat:watercooler')))
-      client.send(msgpack.encode(msp.joinPacket('chat:frontend')))
+      client.send(JSON.stringify(msp.joinPacket('chat:watercooler')))
+      client.send(JSON.stringify(msp.joinPacket('chat:frontend')))
     })
   }).timeout(5000)
 
@@ -283,7 +282,7 @@ test.group('Ws', (group) => {
 
     const client = helpers.startClient({}, '/adonis-ws')
     client.on('open', () => {
-      client.send(msgpack.encode(msp.joinPacket('chat')))
+      client.send(JSON.stringify(msp.joinPacket('chat')))
     })
   })
 
@@ -299,11 +298,11 @@ test.group('Ws', (group) => {
     })
 
     function joinChannel (client) {
-      client.send(msgpack.encode(msp.joinPacket('chat')))
+      client.send(JSON.stringify(msp.joinPacket('chat')))
     }
 
     function onMessage (payload) {
-      const packet = msgpack.decode(payload)
+      const packet = JSON.parse(payload)
       if (packet.t === msp.codes.EVENT) {
         receivedMessages.push(packet.d)
       }
@@ -348,11 +347,11 @@ test.group('Ws', (group) => {
     })
 
     function joinChannel (client) {
-      client.send(msgpack.encode(msp.joinPacket('chat')))
+      client.send(JSON.stringify(msp.joinPacket('chat')))
     }
 
     function onMessage (payload) {
-      const packet = msgpack.decode(payload)
+      const packet = JSON.parse(payload)
       if (packet.t === msp.codes.EVENT) {
         receivedMessages.push(packet.d)
       }
@@ -406,11 +405,11 @@ test.group('Ws', (group) => {
     })
 
     function joinChannel (client, topic) {
-      client.send(msgpack.encode(msp.joinPacket(topic)))
+      client.send(JSON.stringify(msp.joinPacket(topic)))
     }
 
     function onMessage (payload) {
-      const packet = msgpack.decode(payload)
+      const packet = JSON.parse(payload)
       if (packet.t === msp.codes.EVENT) {
         receivedMessages.push(packet.d)
       }

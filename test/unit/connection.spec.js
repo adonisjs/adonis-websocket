@@ -10,12 +10,11 @@
 */
 
 const test = require('japa')
-const msgpack = require('msgpack-lite')
 const msp = require('@adonisjs/websocket-packet')
-const MsgPack = require('@adonisjs/msgpack-encoder')
 
 const Connection = require('../../src/Connection')
 const Manager = require('../../src/Channel/Manager')
+const JsonEncoder = require('../../src/JsonEncoder')
 
 const helpers = require('../helpers')
 
@@ -37,7 +36,7 @@ test.group('Connection', (group) => {
 
     this.ws = helpers.startWsServer()
     this.ws.on('connection', (ws, req) => {
-      const connection = new Connection(ws, req, new MsgPack())
+      const connection = new Connection(ws, req, JsonEncoder)
       assert.equal(connection.ws._eventsCount, 3)
       assert.property(connection.ws._events, 'message')
       assert.property(connection.ws._events, 'error')
@@ -52,13 +51,13 @@ test.group('Connection', (group) => {
 
     this.ws = helpers.startWsServer()
     this.ws.on('connection', (ws, req) => {
-      const connection = new Connection(ws, req, new MsgPack())
+      const connection = new Connection(ws, req, JsonEncoder)
       connection.sendOpenPacket()
     })
 
     const client = helpers.startClient()
     client.on('message', function (payload) {
-      assert.isTrue(msp.isOpenPacket(msgpack.decode(payload)))
+      assert.isTrue(msp.isOpenPacket(JSON.parse(payload)))
       done()
     })
   })
@@ -69,19 +68,19 @@ test.group('Connection', (group) => {
     this.ws = helpers.startWsServer()
     this.ws.on('connection', (ws, req) => {
       /* eslint no-new: "off" */
-      new Connection(ws, req, new MsgPack())
+      new Connection(ws, req, JsonEncoder)
     })
 
     const client = helpers.startClient()
     client.on('message', function (payload) {
-      const packet = msgpack.decode(payload)
+      const packet = JSON.parse(payload)
       done(() => {
         assert.deepEqual(packet, { t: msp.codes.JOIN_ERROR, d: { topic: 'unknown', message: 'Missing topic name' } })
       })
     })
 
     client.on('open', function () {
-      client.send(msgpack.encode({ t: msp.codes.JOIN }))
+      client.send(JSON.stringify({ t: msp.codes.JOIN }))
     })
   })
 
@@ -91,12 +90,12 @@ test.group('Connection', (group) => {
     this.ws = helpers.startWsServer()
     this.ws.on('connection', (ws, req) => {
       /* eslint no-new: "off" */
-      new Connection(ws, req, new MsgPack())
+      new Connection(ws, req, JsonEncoder)
     })
 
     const client = helpers.startClient()
     client.on('message', function (payload) {
-      const packet = msgpack.decode(payload)
+      const packet = JSON.parse(payload)
       done(() => {
         assert.deepEqual(packet, {
           t: msp.codes.JOIN_ERROR,
@@ -106,7 +105,7 @@ test.group('Connection', (group) => {
     })
 
     client.on('open', function () {
-      client.send(msgpack.encode({ t: msp.codes.JOIN, d: { topic: 'chat' } }))
+      client.send(JSON.stringify({ t: msp.codes.JOIN, d: { topic: 'chat' } }))
     })
   })
 
@@ -116,21 +115,21 @@ test.group('Connection', (group) => {
     this.ws = helpers.startWsServer()
     this.ws.on('connection', (ws, req) => {
       /* eslint no-new: "off" */
-      new Connection(ws, req, new MsgPack())
+      new Connection(ws, req, JsonEncoder)
     })
 
     Manager.add('chat', function () {})
 
     const client = helpers.startClient()
     client.on('message', function (payload) {
-      const packet = msgpack.decode(payload)
+      const packet = JSON.parse(payload)
       done(() => {
         assert.deepEqual(packet, { t: msp.codes.JOIN_ACK, d: { topic: 'chat' } })
       })
     })
 
     client.on('open', function () {
-      client.send(msgpack.encode({ t: msp.codes.JOIN, d: { topic: 'chat' } }))
+      client.send(JSON.stringify({ t: msp.codes.JOIN, d: { topic: 'chat' } }))
     })
   })
 
@@ -141,7 +140,7 @@ test.group('Connection', (group) => {
 
     this.ws = helpers.startWsServer()
     this.ws.on('connection', (ws, req) => {
-      connection = new Connection(ws, req, new MsgPack())
+      connection = new Connection(ws, req, JsonEncoder)
     })
 
     Manager.add('chat', function ({ socket }) {
@@ -159,7 +158,7 @@ test.group('Connection', (group) => {
     })
 
     client.on('open', function () {
-      client.send(msgpack.encode({ t: msp.codes.JOIN, d: { topic: 'chat' } }))
+      client.send(JSON.stringify({ t: msp.codes.JOIN, d: { topic: 'chat' } }))
     })
   })
 
@@ -170,7 +169,7 @@ test.group('Connection', (group) => {
     this.ws = helpers.startWsServer()
     this.ws.on('connection', (ws, req) => {
       /* eslint no-new: "off" */
-      new Connection(ws, req, new MsgPack())
+      new Connection(ws, req, JsonEncoder)
     })
 
     Manager.add('chat', function () {
@@ -183,7 +182,7 @@ test.group('Connection', (group) => {
     const client = helpers.startClient()
 
     client.on('message', function (payload) {
-      const packet = msgpack.decode(payload)
+      const packet = JSON.parse(payload)
       if (packet.t === msp.codes.JOIN_ERROR) {
         done(() => {
           assert.deepEqual(packet, {
@@ -195,8 +194,8 @@ test.group('Connection', (group) => {
     })
 
     client.on('open', function () {
-      client.send(msgpack.encode({ t: msp.codes.JOIN, d: { topic: 'chat' } }))
-      client.send(msgpack.encode({ t: msp.codes.JOIN, d: { topic: 'chat' } }))
+      client.send(JSON.stringify({ t: msp.codes.JOIN, d: { topic: 'chat' } }))
+      client.send(JSON.stringify({ t: msp.codes.JOIN, d: { topic: 'chat' } }))
     })
   })
 
@@ -208,7 +207,7 @@ test.group('Connection', (group) => {
 
     this.ws = helpers.startWsServer()
     this.ws.on('connection', (ws, req) => {
-      connection = new Connection(ws, req, new MsgPack())
+      connection = new Connection(ws, req, JsonEncoder)
     })
 
     Manager.add('chat', function () {})
@@ -216,7 +215,7 @@ test.group('Connection', (group) => {
     const client = helpers.startClient()
 
     client.on('message', function (payload) {
-      const packet = msgpack.decode(payload)
+      const packet = JSON.parse(payload)
       responsePackets.push(packet)
 
       if (responsePackets.length === 4) {
@@ -233,10 +232,10 @@ test.group('Connection', (group) => {
     })
 
     client.on('open', function () {
-      client.send(msgpack.encode({ t: msp.codes.JOIN }))
-      client.send(msgpack.encode({ t: msp.codes.JOIN, d: { topic: 'foo' } }))
-      client.send(msgpack.encode({ t: msp.codes.JOIN, d: { topic: 'chat' } }))
-      client.send(msgpack.encode({ t: msp.codes.JOIN, d: { topic: 'chat' } }))
+      client.send(JSON.stringify({ t: msp.codes.JOIN }))
+      client.send(JSON.stringify({ t: msp.codes.JOIN, d: { topic: 'foo' } }))
+      client.send(JSON.stringify({ t: msp.codes.JOIN, d: { topic: 'chat' } }))
+      client.send(JSON.stringify({ t: msp.codes.JOIN, d: { topic: 'chat' } }))
     })
   })
 
@@ -246,7 +245,7 @@ test.group('Connection', (group) => {
     this.ws = helpers.startWsServer()
     this.ws.on('connection', (ws, req) => {
       /* eslint no-new: "off" */
-      new Connection(ws, req, new MsgPack())
+      new Connection(ws, req, JsonEncoder)
     })
 
     Manager.add('chat', function () {})
@@ -254,14 +253,14 @@ test.group('Connection', (group) => {
     const client = helpers.startClient()
 
     client.on('message', function (payload) {
-      const packet = msgpack.decode(payload)
+      const packet = JSON.parse(payload)
       done(() => {
         assert.deepEqual(packet, { t: msp.codes.LEAVE_ERROR, d: { topic: 'unknown', message: 'Missing topic name' } })
       })
     })
 
     client.on('open', function () {
-      client.send(msgpack.encode({ t: msp.codes.LEAVE }))
+      client.send(JSON.stringify({ t: msp.codes.LEAVE }))
     })
   })
 
@@ -273,7 +272,7 @@ test.group('Connection', (group) => {
     this.ws = helpers.startWsServer()
     this.ws.on('connection', (ws, req) => {
       /* eslint no-new: "off" */
-      new Connection(ws, req, new MsgPack())
+      new Connection(ws, req, JsonEncoder)
     })
 
     Manager.add('chat', function () {})
@@ -281,7 +280,7 @@ test.group('Connection', (group) => {
     const client = helpers.startClient()
 
     client.on('message', function (payload) {
-      const packet = msgpack.decode(payload)
+      const packet = JSON.parse(payload)
       responsePackets.push(packet)
 
       if (responsePackets.length === 2) {
@@ -295,8 +294,8 @@ test.group('Connection', (group) => {
     })
 
     client.on('open', function () {
-      client.send(msgpack.encode({ t: msp.codes.JOIN, d: { topic: 'chat' } }))
-      client.send(msgpack.encode({ t: msp.codes.LEAVE, d: { topic: 'chat' } }))
+      client.send(JSON.stringify({ t: msp.codes.JOIN, d: { topic: 'chat' } }))
+      client.send(JSON.stringify({ t: msp.codes.LEAVE, d: { topic: 'chat' } }))
     })
   })
 
@@ -308,7 +307,7 @@ test.group('Connection', (group) => {
 
     this.ws = helpers.startWsServer()
     this.ws.on('connection', (ws, req) => {
-      connection = new Connection(ws, req, new MsgPack())
+      connection = new Connection(ws, req, JsonEncoder)
     })
 
     const channel = Manager.add('chat', function () {})
@@ -326,8 +325,8 @@ test.group('Connection', (group) => {
     })
 
     client.on('open', function () {
-      client.send(msgpack.encode({ t: msp.codes.JOIN, d: { topic: 'chat' } }))
-      client.send(msgpack.encode({ t: msp.codes.LEAVE, d: { topic: 'chat' } }))
+      client.send(JSON.stringify({ t: msp.codes.JOIN, d: { topic: 'chat' } }))
+      client.send(JSON.stringify({ t: msp.codes.LEAVE, d: { topic: 'chat' } }))
     })
   })
 
@@ -339,7 +338,7 @@ test.group('Connection', (group) => {
 
     this.ws = helpers.startWsServer()
     this.ws.on('connection', (ws, req) => {
-      const connection = new Connection(ws, req, new MsgPack())
+      const connection = new Connection(ws, req, JsonEncoder)
       connections[req.url] = connection
     })
 
@@ -367,12 +366,12 @@ test.group('Connection', (group) => {
     client1.on('message', messageHandler)
 
     client.on('open', function () {
-      client.send(msgpack.encode({ t: msp.codes.JOIN, d: { topic: 'chat' } }))
-      client.send(msgpack.encode({ t: msp.codes.LEAVE, d: { topic: 'chat' } }))
+      client.send(JSON.stringify({ t: msp.codes.JOIN, d: { topic: 'chat' } }))
+      client.send(JSON.stringify({ t: msp.codes.LEAVE, d: { topic: 'chat' } }))
     })
 
     client1.on('open', function () {
-      client1.send(msgpack.encode({ t: msp.codes.JOIN, d: { topic: 'chat' } }))
+      client1.send(JSON.stringify({ t: msp.codes.JOIN, d: { topic: 'chat' } }))
     })
   })
 
@@ -382,7 +381,7 @@ test.group('Connection', (group) => {
 
     this.ws = helpers.startWsServer()
     this.ws.on('connection', (ws, req) => {
-      connection = new Connection(ws, req, new MsgPack())
+      connection = new Connection(ws, req, JsonEncoder)
     })
 
     const channel = Manager.add('chat', function () {})
@@ -398,7 +397,7 @@ test.group('Connection', (group) => {
     })
 
     client.on('open', function () {
-      client.send(msgpack.encode({ t: msp.codes.JOIN, d: { topic: 'chat' } }))
+      client.send(JSON.stringify({ t: msp.codes.JOIN, d: { topic: 'chat' } }))
     })
   })
 
@@ -409,7 +408,7 @@ test.group('Connection', (group) => {
 
     this.ws = helpers.startWsServer()
     this.ws.on('connection', (ws, req) => {
-      connection = new Connection(ws, req, new MsgPack())
+      connection = new Connection(ws, req, JsonEncoder)
     })
 
     const channel = Manager.add('chat', function ({ socket }) {
@@ -431,7 +430,7 @@ test.group('Connection', (group) => {
     })
 
     client.on('open', function () {
-      client.send(msgpack.encode({ t: msp.codes.JOIN, d: { topic: 'chat' } }))
+      client.send(JSON.stringify({ t: msp.codes.JOIN, d: { topic: 'chat' } }))
     })
   })
 
@@ -441,7 +440,7 @@ test.group('Connection', (group) => {
     this.ws = helpers.startWsServer()
     this.ws.on('connection', (ws, req) => {
       /* eslint no-new: "off" */
-      new Connection(ws, req, new MsgPack())
+      new Connection(ws, req, JsonEncoder)
     })
 
     Manager.add('chat', function () {})
@@ -449,7 +448,7 @@ test.group('Connection', (group) => {
     const client = helpers.startClient()
 
     client.on('message', function (payload) {
-      const packet = msgpack.decode(payload)
+      const packet = JSON.parse(payload)
       assert.deepEqual(packet, {
         t: msp.codes.LEAVE_ACK, d: { topic: 'chat' }
       })
@@ -457,7 +456,7 @@ test.group('Connection', (group) => {
     })
 
     client.on('open', function () {
-      client.send(msgpack.encode({ t: msp.codes.LEAVE, d: { topic: 'chat' } }))
+      client.send(JSON.stringify({ t: msp.codes.LEAVE, d: { topic: 'chat' } }))
     })
   })
 
@@ -468,7 +467,7 @@ test.group('Connection', (group) => {
 
     this.ws = helpers.startWsServer()
     this.ws.on('connection', (ws, req) => {
-      connection = new Connection(ws, req, new MsgPack())
+      connection = new Connection(ws, req, JsonEncoder)
     })
 
     const channel = Manager
@@ -480,7 +479,7 @@ test.group('Connection', (group) => {
     const client = helpers.startClient()
 
     client.on('message', function (payload) {
-      const packet = msgpack.decode(payload)
+      const packet = JSON.parse(payload)
       done(function () {
         assert.deepEqual(packet, {
           t: msp.codes.JOIN_ERROR, d: { topic: 'chat', message: 'Unauthorized' }
@@ -491,7 +490,7 @@ test.group('Connection', (group) => {
     })
 
     client.on('open', function () {
-      client.send(msgpack.encode({ t: msp.codes.JOIN, d: { topic: 'chat' } }))
+      client.send(JSON.stringify({ t: msp.codes.JOIN, d: { topic: 'chat' } }))
     })
   })
 
@@ -500,7 +499,7 @@ test.group('Connection', (group) => {
 
     this.ws = helpers.startWsServer()
     this.ws.on('connection', (ws, req) => {
-      new Connection(ws, req, new MsgPack())
+      new Connection(ws, req, JsonEncoder)
     })
 
     Manager.add('chat', function ({ socket }) {
@@ -510,7 +509,7 @@ test.group('Connection', (group) => {
     const client = helpers.startClient()
 
     client.on('message', function (payload) {
-      const packet = msgpack.decode(payload)
+      const packet = JSON.parse(payload)
       if (packet.t === msp.codes.EVENT) {
         done(function () {
           assert.deepEqual(packet.d, { topic: 'chat', body: { event: 'greeting', data: 'hello' } })
@@ -519,7 +518,7 @@ test.group('Connection', (group) => {
     })
 
     client.on('open', function () {
-      client.send(msgpack.encode({ t: msp.codes.JOIN, d: { topic: 'chat' } }))
+      client.send(JSON.stringify({ t: msp.codes.JOIN, d: { topic: 'chat' } }))
     })
   })
 
@@ -528,10 +527,12 @@ test.group('Connection', (group) => {
 
     this.ws = helpers.startWsServer()
     this.ws.on('connection', (ws, req) => {
-      const msgpackEncoder = new MsgPack()
-      msgpackEncoder.encode = function (payload, cb) {
-        cb(new Error('Cannot encode'))
-      }
+      const msgpackEncoder = Object.assign({}, JsonEncoder, {
+        encode (payload, cb) {
+          cb(new Error('Cannot encode'))
+        }
+      })
+
       const connection = new Connection(ws, req, msgpackEncoder)
       connection.sendPacket(1, {}, function (error) {
         assert.equal(error.message, 'Cannot encode')
@@ -548,10 +549,10 @@ test.group('Connection', (group) => {
     this.ws = helpers.startWsServer()
 
     this.ws.on('connection', (ws, req) => {
-      const connection = new Connection(ws, req, new MsgPack())
+      const connection = new Connection(ws, req, JsonEncoder)
       connection.close()
 
-      connection.sendPacket(1, {}, (error) => {
+      connection.sendPacket({ d: 1 }, {}, (error) => {
         setTimeout(() => {
           done(() => {
             assert.equal(error.message, 'connection is closed')
@@ -569,7 +570,7 @@ test.group('Connection', (group) => {
     this.ws = helpers.startWsServer()
 
     this.ws.on('connection', (ws, req) => {
-      const connection = new Connection(ws, req, new MsgPack())
+      const connection = new Connection(ws, req, JsonEncoder)
       const fn = () => connection.sendEvent()
       done(() => {
         assert.throw(fn, 'Cannot send event without a topic')
@@ -585,7 +586,7 @@ test.group('Connection', (group) => {
     this.ws = helpers.startWsServer()
 
     this.ws.on('connection', (ws, req) => {
-      const connection = new Connection(ws, req, new MsgPack())
+      const connection = new Connection(ws, req, JsonEncoder)
       const fn = () => connection.sendEvent('chat')
       done(() => {
         assert.throw(fn, 'Topic chat doesn\'t have any active subscriptions')
@@ -599,7 +600,7 @@ test.group('Connection', (group) => {
     this.ws = helpers.startWsServer()
 
     this.ws.on('connection', (ws, req) => {
-      const connection = new Connection(ws, req, new MsgPack())
+      const connection = new Connection(ws, req, JsonEncoder)
       connection._handleMessage = function () {
         throw new Error('Never expected to be executed')
       }
@@ -607,7 +608,7 @@ test.group('Connection', (group) => {
 
     const client = helpers.startClient()
     client.on('open', () => {
-      client.send(msgpack.encode({ hello: 'world' }))
+      client.send(JSON.stringify({ hello: 'world' }))
       setTimeout(() => {
         done()
       })
@@ -618,7 +619,7 @@ test.group('Connection', (group) => {
     this.ws = helpers.startWsServer()
 
     this.ws.on('connection', (ws, req) => {
-      const connection = new Connection(ws, req, new MsgPack())
+      const connection = new Connection(ws, req, JsonEncoder)
       connection._handleMessage = function () {
         throw new Error('Never expected to be executed')
       }
@@ -639,7 +640,7 @@ test.group('Connection', (group) => {
 
     this.ws = helpers.startWsServer()
     this.ws.on('connection', (ws, req) => {
-      connection = new Connection(ws, req, new MsgPack())
+      connection = new Connection(ws, req, JsonEncoder)
     })
 
     const channel = Manager.add('chat', function ({ socket }) {
@@ -649,7 +650,7 @@ test.group('Connection', (group) => {
     const client = helpers.startClient()
 
     client.on('message', function (payload) {
-      const packet = msgpack.decode(payload)
+      const packet = JSON.parse(payload)
       if (packet.t === msp.codes.LEAVE) {
         setTimeout(() => {
           assert.equal(connection._subscriptions.size, 0)
@@ -660,7 +661,7 @@ test.group('Connection', (group) => {
     })
 
     client.on('open', function () {
-      client.send(msgpack.encode({ t: msp.codes.JOIN, d: { topic: 'chat' } }))
+      client.send(JSON.stringify({ t: msp.codes.JOIN, d: { topic: 'chat' } }))
     })
   })
 
@@ -669,7 +670,7 @@ test.group('Connection', (group) => {
 
     this.ws = helpers.startWsServer()
     this.ws.on('connection', (ws, req) => {
-      new Connection(ws, req, new MsgPack())
+      new Connection(ws, req, JsonEncoder)
     })
 
     Manager.add('chat', function ({ socket }) {
@@ -683,21 +684,21 @@ test.group('Connection', (group) => {
     const client = helpers.startClient()
 
     client.on('message', function (payload) {
-      const packet = msgpack.decode(payload)
+      const packet = JSON.parse(payload)
       if (packet.t === msp.codes.JOIN_ACK) {
-        client.send(msgpack.encode({ t: msp.codes.EVENT, d: { topic: 'chat', event: 'greeting', data: 'hello' } }))
+        client.send(JSON.stringify({ t: msp.codes.EVENT, d: { topic: 'chat', event: 'greeting', data: 'hello' } }))
       }
     })
 
     client.on('open', function () {
-      client.send(msgpack.encode({ t: msp.codes.JOIN, d: { topic: 'chat' } }))
+      client.send(JSON.stringify({ t: msp.codes.JOIN, d: { topic: 'chat' } }))
     })
   })
 
   test('drop event packet when there is no data', (assert, done) => {
     this.ws = helpers.startWsServer()
     this.ws.on('connection', (ws, req) => {
-      new Connection(ws, req, new MsgPack())
+      new Connection(ws, req, JsonEncoder)
     })
 
     Manager.add('chat', function ({ socket }) {
@@ -709,9 +710,9 @@ test.group('Connection', (group) => {
     const client = helpers.startClient()
 
     client.on('message', function (payload) {
-      const packet = msgpack.decode(payload)
+      const packet = JSON.parse(payload)
       if (packet.t === msp.codes.JOIN_ACK) {
-        client.send(msgpack.encode({ t: msp.codes.EVENT }))
+        client.send(JSON.stringify({ t: msp.codes.EVENT }))
         setTimeout(() => {
           done()
         }, 500)
@@ -719,20 +720,20 @@ test.group('Connection', (group) => {
     })
 
     client.on('open', function () {
-      client.send(msgpack.encode({ t: msp.codes.JOIN, d: { topic: 'chat' } }))
+      client.send(JSON.stringify({ t: msp.codes.JOIN, d: { topic: 'chat' } }))
     })
   })
 
   test('drop event packet when there are no subscriptions for the topic', (assert, done) => {
     this.ws = helpers.startWsServer()
     this.ws.on('connection', (ws, req) => {
-      new Connection(ws, req, new MsgPack())
+      new Connection(ws, req, JsonEncoder)
     })
 
     const client = helpers.startClient()
 
     client.on('open', function () {
-      client.send(msgpack.encode({ t: msp.codes.EVENT, d: { topic: 'chat', event: 'greeting', data: 'hello' } }))
+      client.send(JSON.stringify({ t: msp.codes.EVENT, d: { topic: 'chat', event: 'greeting', data: 'hello' } }))
       setTimeout(() => {
         done()
       }, 500)
@@ -745,14 +746,14 @@ test.group('Connection', (group) => {
     this.ws = helpers.startWsServer()
 
     this.ws.on('connection', (ws, req) => {
-      connection = new Connection(ws, req, new MsgPack())
+      connection = new Connection(ws, req, JsonEncoder)
       connection.pingElapsed = 1
     })
 
     const client = helpers.startClient()
 
     client.on('open', function () {
-      client.send(msgpack.encode({ t: msp.codes.EVENT, d: { topic: 'chat', event: 'greeting', data: 'hello' } }))
+      client.send(JSON.stringify({ t: msp.codes.EVENT, d: { topic: 'chat', event: 'greeting', data: 'hello' } }))
       setTimeout(() => {
         done(() => {
           assert.equal(connection.pingElapsed, 0)
@@ -768,7 +769,7 @@ test.group('Connection', (group) => {
 
     this.ws = helpers.startWsServer()
     this.ws.on('connection', (ws, req) => {
-      connection = new Connection(ws, req, new MsgPack())
+      connection = new Connection(ws, req, JsonEncoder)
       connection.pingElapsed = 1
     })
 
@@ -785,7 +786,7 @@ test.group('Connection', (group) => {
     })
 
     client.on('open', () => {
-      client.send(msgpack.encode({ t: msp.codes.JOIN, d: { topic: 'chat' } }))
+      client.send(JSON.stringify({ t: msp.codes.JOIN, d: { topic: 'chat' } }))
     })
   })
 
@@ -794,18 +795,18 @@ test.group('Connection', (group) => {
 
     this.ws = helpers.startWsServer()
     this.ws.on('connection', (ws, req) => {
-      new Connection(ws, req, new MsgPack())
+      new Connection(ws, req, JsonEncoder)
     })
 
     const client = helpers.startClient()
 
     client.on('message', (payload) => {
-      assert.deepEqual(msgpack.decode(payload), { t: msp.codes.PONG })
+      assert.deepEqual(JSON.parse(payload), { t: msp.codes.PONG })
       done()
     })
 
     client.on('open', () => {
-      client.send(msgpack.encode({ t: msp.codes.PING }))
+      client.send(JSON.stringify({ t: msp.codes.PING }))
     })
   })
 
@@ -814,7 +815,7 @@ test.group('Connection', (group) => {
 
     this.ws = helpers.startWsServer()
     this.ws.on('connection', (ws, req) => {
-      const connection = new Connection(ws, req, new MsgPack())
+      const connection = new Connection(ws, req, JsonEncoder)
       connection.write('hello world')
     })
 
@@ -831,7 +832,7 @@ test.group('Connection', (group) => {
 
     this.ws = helpers.startWsServer()
     this.ws.on('connection', (ws, req) => {
-      const connection = new Connection(ws, req, new MsgPack())
+      const connection = new Connection(ws, req, JsonEncoder)
       connection.close()
       setTimeout(() => {
         connection.write('hello world', {}, ({ message }) => {
@@ -852,7 +853,7 @@ test.group('Connection', (group) => {
 
     this.ws = helpers.startWsServer()
     this.ws.on('connection', (ws, req) => {
-      const connection = new Connection(ws, req, new MsgPack())
+      const connection = new Connection(ws, req, JsonEncoder)
       connection._notifyPacketDropped = function (handle, message) {
         assert.equal(message, 'invalid packet %j')
         done()
@@ -861,7 +862,7 @@ test.group('Connection', (group) => {
 
     const client = helpers.startClient()
     client.on('open', function (payload) {
-      client.send(msgpack.encode({ t: 99 }))
+      client.send(JSON.stringify({ t: 99 }))
     })
   })
 })
