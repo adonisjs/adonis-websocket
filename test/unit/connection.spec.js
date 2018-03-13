@@ -512,7 +512,7 @@ test.group('Connection', (group) => {
       const packet = JSON.parse(payload)
       if (packet.t === msp.codes.EVENT) {
         done(function () {
-          assert.deepEqual(packet.d, { topic: 'chat', body: { event: 'greeting', data: 'hello' } })
+          assert.deepEqual(packet.d, { topic: 'chat', event: 'greeting', data: 'hello' })
         })
       }
     })

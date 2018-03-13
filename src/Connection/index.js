@@ -612,11 +612,12 @@ class Connection extends Emittery {
    * @method makeEventPacket
    *
    * @param  {String}        topic
-   * @param  {Object}        body
+   * @param  {String}        event
+   * @param  {Mixed}         data
    *
    * @return {Object}
    */
-  makeEventPacket (topic, body) {
+  makeEventPacket (topic, event, data) {
     if (!topic) {
       throw new Error('Cannot send event without a topic')
     }
@@ -625,7 +626,7 @@ class Connection extends Emittery {
       throw new Error(`Topic ${topic} doesn't have any active subscriptions`)
     }
 
-    return msp.eventPacket(topic, body)
+    return msp.eventPacket(topic, event, data)
   }
 
   /**
@@ -634,13 +635,14 @@ class Connection extends Emittery {
    * @method sendEvent
    *
    * @param  {String}    topic
-   * @param  {Object}    body
+   * @param  {String}    event
+   * @param  {Mixed}     data
    * @param  {Function}  [ack]
    *
    * @return {void}
    */
-  sendEvent (topic, body, ack) {
-    this.sendPacket(this.makeEventPacket(topic, body), {}, ack)
+  sendEvent (topic, event, data, ack) {
+    this.sendPacket(this.makeEventPacket(topic, event, data), {}, ack)
   }
 
   /**

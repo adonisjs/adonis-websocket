@@ -75,15 +75,16 @@ test.group('Socket', () => {
 
 test.group('Socket emitting', () => {
   test('emit event to itself', (assert, done) => {
-    assert.plan(2)
+    assert.plan(3)
 
     const connection = new FakeConnection()
     const socket = new Socket('chat', connection)
     const channel = new FakeChannel('chat')
 
-    connection.sendEvent = function (topic, payload) {
+    connection.sendEvent = function (topic, event, data) {
       assert.equal(topic, 'chat')
-      assert.deepEqual(payload, { event: 'hello', data: 'world' })
+      assert.equal(event, 'hello')
+      assert.equal(data, 'world')
       done()
     }
 
@@ -101,7 +102,7 @@ test.group('Socket emitting', () => {
     channel.broadcast = function (topic, payload, filterIds) {
       done(() => {
         assert.equal(topic, 'chat')
-        assert.deepEqual(payload, { topic: 'chat', body: { event: 'hello', data: 'world' } })
+        assert.deepEqual(payload, { topic: 'chat', event: 'hello', data: 'world' })
         assert.deepEqual(filterIds, [socket.id])
       })
     }
@@ -122,7 +123,7 @@ test.group('Socket emitting', () => {
     channel.broadcast = function (topic, payload, filterIds) {
       done(() => {
         assert.equal(topic, 'chat')
-        assert.deepEqual(payload, { topic: 'chat', body: { event: 'hello', data: 'world' } })
+        assert.deepEqual(payload, { topic: 'chat', event: 'hello', data: 'world' })
         assert.deepEqual(filterIds, [])
       })
     }

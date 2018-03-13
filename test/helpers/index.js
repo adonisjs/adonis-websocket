@@ -60,8 +60,8 @@ module.exports = {
         cb(null, message)
       }
 
-      makeEventPacket (topic, body) {
-        return { topic, body }
+      makeEventPacket (topic, event, data) {
+        return { topic, event, data }
       }
 
       sendLeavePacket () {

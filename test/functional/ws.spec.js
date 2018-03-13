@@ -311,11 +311,13 @@ test.group('Ws', (group) => {
         done(() => {
           assert.deepEqual(receivedMessages, [
             {
-              body: { event: 'greeting', data: { hello: 'world' } },
+              event: 'greeting',
+              data: { hello: 'world' },
               topic: 'chat'
             },
             {
-              body: { event: 'greeting', data: { hello: 'world' } },
+              event: 'greeting',
+              data: { hello: 'world' },
               topic: 'chat'
             }
           ])
@@ -360,15 +362,18 @@ test.group('Ws', (group) => {
         done(() => {
           assert.deepEqual(receivedMessages, [
             {
-              body: { event: 'greeting', data: { hello: 'world' } },
+              event: 'greeting',
+              data: { hello: 'world' },
               topic: 'chat'
             },
             {
-              body: { event: 'greeting', data: { hello: 'world' } },
+              event: 'greeting',
+              data: { hello: 'world' },
               topic: 'chat'
             },
             {
-              body: { event: 'greeting', data: { hello: 'world' } },
+              event: 'greeting',
+              data: { hello: 'world' },
               topic: 'chat'
             }
           ])
@@ -418,11 +423,13 @@ test.group('Ws', (group) => {
         done(() => {
           assert.deepEqual(receivedMessages, [
             {
-              body: { event: 'greeting', data: { hello: 'world' } },
+              event: 'greeting',
+              data: { hello: 'world' },
               topic: 'chat:watercooler'
             },
             {
-              body: { event: 'greeting', data: { hello: 'world' } },
+              event: 'greeting',
+              data: { hello: 'world' },
               topic: 'chat:watercooler'
             }
           ])

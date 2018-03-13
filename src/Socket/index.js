@@ -112,7 +112,7 @@ class Socket {
    * @return {void}
    */
   emit (event, data, ack) {
-    this.connection.sendEvent(this.topic, { event, data }, ack)
+    this.connection.sendEvent(this.topic, event, data, ack)
   }
 
   /**
@@ -126,7 +126,7 @@ class Socket {
    * @return {void}
    */
   broadcast (event, data) {
-    const packet = this.connection.makeEventPacket(this.topic, { event, data })
+    const packet = this.connection.makeEventPacket(this.topic, event, data)
 
     /**
      * Encoding the packet before hand, so that we don't pay the penalty of
@@ -153,7 +153,7 @@ class Socket {
    * @return {void}
    */
   broadcastToAll (event, data) {
-    const packet = this.connection.makeEventPacket(this.topic, { event, data })
+    const packet = this.connection.makeEventPacket(this.topic, event, data)
 
     /**
      * Encoding the packet before hand, so that we don't pay the penalty of

@@ -26,18 +26,18 @@
     "cz-conventional-changelog": "^2.1.0",
     "japa": "^1.0.6",
     "japa-cli": "^1.0.1",
-    "nyc": "^11.4.1",
+    "nyc": "^11.6.0",
     "standard": "^11.0.0"
   },
   "dependencies": {
     "@adonisjs/generic-exceptions": "^2.0.0",
-    "@adonisjs/websocket-packet": "^1.0.4",
+    "@adonisjs/websocket-packet": "^1.0.5",
     "co-compose": "^4.0.0",
     "cuid": "^2.1.0",
     "debug": "^3.1.0",
     "emittery": "^0.3.0",
     "macroable": "^1.0.0",
-    "ws": "^4.1.0"
+    "ws": "^5.0.0"
   },
   "nyc": {
     "exclude": [
