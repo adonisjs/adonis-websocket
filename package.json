@@ -32,7 +32,7 @@
   },
   "dependencies": {
     "@adonisjs/generic-exceptions": "^2.0.0",
-    "@adonisjs/websocket-packet": "^1.0.5",
+    "@adonisjs/websocket-packet": "^1.0.6",
     "co-compose": "^4.0.0",
     "cuid": "^2.1.0",
     "debug": "^3.1.0",
