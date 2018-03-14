@@ -27,7 +27,8 @@
     "japa": "^1.0.6",
     "japa-cli": "^1.0.1",
     "nyc": "^11.6.0",
-    "standard": "^11.0.0"
+    "standard": "^11.0.0",
+    "test-console": "^1.1.0"
   },
   "dependencies": {
     "@adonisjs/generic-exceptions": "^2.0.0",
@@ -43,6 +44,7 @@
     "exclude": [
       "src/Context/index.js",
       "src/ClusterHop/index.js",
+      "src/ClusterHop/sender.js",
       "test"
     ]
   },

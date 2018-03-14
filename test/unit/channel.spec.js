@@ -145,10 +145,52 @@ test.group('Channel', () => {
       assert.equal(message, 'Cannot join topic')
     }
   })
+
+  test('write payload to socket connection when broadcast is invoked', (assert, done) => {
+    assert.plan(1)
+
+    const connection = new FakeConnection()
+    connection.write = function (payload) {
+      assert.equal(payload, 'hello')
+      done()
+    }
+
+    const ctx = {
+      socket: new Socket('foo', connection)
+    }
+
+    const channel = new Channel('foo', function () {})
+    channel
+      .joinTopic(ctx)
+      .then(() => {
+        channel.broadcast('foo', 'hello')
+      })
+  })
+
+  test('ignore when broadcast is called for a topic, which has zero subscriptions', (assert, done) => {
+    const connection = new FakeConnection()
+    connection.write = function (payload) {
+      assert.throw('Never expected to be called')
+    }
+
+    const ctx = {
+      socket: new Socket('foo', connection)
+    }
+
+    const channel = new Channel('foo', function () {})
+    channel
+      .joinTopic(ctx)
+      .then(() => {
+        channel.broadcast('bar', 'hello')
+        setTimeout(() => {
+          done()
+        }, 200)
+      })
+  })
 })
 
 test.group('Channel Manager', (group) => {
-  group.beforeEach(() => {
+  group.afterEach(() => {
     Manager.clear()
   })
 

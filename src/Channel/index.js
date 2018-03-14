@@ -189,7 +189,7 @@ class Channel {
    * @return {void}
    */
   broadcast (topic, payload, filterSockets = []) {
-    this.subscriptions.get(topic).forEach((socket) => {
+    this.getTopicSubscriptions(topic).forEach((socket) => {
       if (filterSockets.indexOf(socket.id) === -1) {
         socket.connection.write(payload)
       }
