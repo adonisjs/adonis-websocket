@@ -10,6 +10,8 @@
 */
 
 const test = require('japa')
+const { setupResolver } = require('@adonisjs/sink')
+const { ioc } = require('@adonisjs/fold')
 
 const Channel = require('../../src/Channel')
 const Manager = require('../../src/Channel/Manager')
@@ -18,7 +20,11 @@ const Socket = require('../../src/Socket')
 const helpers = require('../helpers')
 const FakeConnection = helpers.getFakeConnection()
 
-test.group('Channel', () => {
+test.group('Channel', (group) => {
+  group.before(() => {
+    setupResolver()
+  })
+
   test('throw exception when channel doesn\'t have a name', (assert) => {
     const channel = () => new Channel()
     assert.throw(channel, 'E_INVALID_PARAMETER: Expected channel name to be string')
@@ -27,6 +33,59 @@ test.group('Channel', () => {
   test('throw exception when channel doesn\'t have a onConnect callback', (assert) => {
     const channel = () => new Channel('foo')
     assert.throw(channel, 'E_INVALID_PARAMETER: Expected channel callback to be a function')
+  })
+
+  test('bind channel controller when a string is passed', (assert, done) => {
+    assert.plan(1)
+    const ctx = {
+      socket: new Socket('chat', new FakeConnection())
+    }
+
+    class ChatController {
+      constructor (__ctx__) {
+        assert.deepEqual(__ctx__, ctx)
+        done()
+      }
+    }
+
+    ioc.bind('App/Controllers/Ws/ChatController', () => {
+      return ChatController
+    })
+
+    const channel = new Channel('chat', 'ChatController')
+    channel.joinTopic(ctx)
+  })
+
+  test('bind listeners automatically that are defined on the controller', (assert, done) => {
+    assert.plan(2)
+
+    const ctx = {
+      socket: new Socket('chat', new FakeConnection())
+    }
+
+    class ChatController {
+      onMessage () {
+      }
+
+      onClose () {
+      }
+    }
+
+    ioc.bind('App/Controllers/Ws/ChatController', () => {
+      return ChatController
+    })
+
+    const channel = new Channel('chat', 'ChatController')
+    channel
+      .joinTopic(ctx)
+      .then(() => {
+        process.nextTick(() => {
+          done(() => {
+            assert.equal(ctx.socket.emitter.listenerCount('message'), 1)
+            assert.equal(ctx.socket.emitter.listenerCount('close'), 2)
+          })
+        })
+      })
   })
 
   test('save topic and socket reference onJoin call', async (assert) => {
