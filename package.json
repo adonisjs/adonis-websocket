@@ -45,6 +45,7 @@
       "src/Context/index.js",
       "src/ClusterHop/index.js",
       "src/ClusterHop/sender.js",
+      "clusterPubSub.js",
       "test"
     ]
   },
