@@ -1,0 +1,38 @@
+= Websocket
+
+=== Detecting memory leaks
+Ensure there are no memory leaks.
+
+1. Always drop sockets when they have been closed.
+2. Ping/pong to drop inactive sockets.
+3. Do not store too much data.
+
+=== Handle chrome disconnect bug
+Chrome disconnect is not graceful so handle the error code and ignore it.
+
+=== Add proper debugging
+Proper debugging is super useful
+
+=== Data encoders
+Allow encoders to be configurable. Useful when someone is not using one of the official client libraries.
+All of the messages are packed using link:https://www.npmjs.com/package/msgpack-lite[Msgpack lite].
+
+=== Packet specs
+----
+{
+  t: 'event name',
+  d: 'data associated with it'
+}
+----
+
+one underlying connection
+one underlying request
+
+  => channels are routes
+  => connection has it's own id
+  => socket id is `name#connect-id`
+  => multiple sockets one for each channels
+  => socket disconnects using events
+  => socket connects using events
+  => packet reference https://github.com/socketio/socket.io-protocol#packet
+  =>
