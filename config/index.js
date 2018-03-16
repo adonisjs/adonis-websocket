@@ -62,18 +62,5 @@ module.exports = {
   | been elapsed, the client will consider server as dead.
   |
   */
-  clientAttempts: 3,
-
-  /*
-  |--------------------------------------------------------------------------
-  | Allow No Channels
-  |--------------------------------------------------------------------------
-  |
-  | The Websocket server will fail to start if no channels have been registered.
-  | It is recommended to keep the flag `false`, since there is no point in
-  | accepting new connections without any channels/subscriptions to respond
-  | to.
-  |
-  */
-  allowNoChannels: false
+  clientAttempts: 3
 }

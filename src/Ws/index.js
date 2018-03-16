@@ -33,7 +33,6 @@ class Ws {
       serverAttempts: 3,
       clientInterval: 25000,
       clientAttempts: 3,
-      allowNoChannels: false,
       encoder: JsonEncoder
     })
 

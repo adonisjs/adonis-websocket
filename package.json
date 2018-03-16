@@ -46,8 +46,12 @@
       "src/ClusterHop/index.js",
       "src/ClusterHop/sender.js",
       "clusterPubSub.js",
-      "test"
+      "test",
+      "config"
     ]
+  },
+  "standard": {
+    "ignore": ["config"]
   },
   "config": {
     "commitizen": {
