@@ -10,8 +10,8 @@
 */
 
 const GE = require('@adonisjs/generic-exceptions')
-const Middleware = require('co-compose')
 const debug = require('debug')('adonis:websocket')
+const middleware = require('../Middleware')
 
 /**
  * Channel class gives a simple way to divide the application
@@ -54,10 +54,9 @@ class Channel {
     this.subscriptions = new Map()
 
     /**
-     * Middleware to be executed when someone attempts to join
-     * a topic
+     * Named middleware defined on the channel
      */
-    this._middleware = new Middleware()
+    this._middleware = []
 
     /**
      * The method attached as an event listener to each
@@ -109,10 +108,10 @@ class Channel {
    * @private
    */
   _executeMiddleware (context) {
-    if (!this._middleware.list.length) {
-      return Promise.resolve()
-    }
-    return this._middleware.runner().params([context]).run()
+    return middleware
+      .composeGlobalAndNamed(this._middleware)
+      .params([context])
+      .run()
   }
 
   /**
@@ -253,7 +252,7 @@ class Channel {
    */
   middleware (middleware) {
     const middlewareList = Array.isArray(middleware) ? middleware : [middleware]
-    this._middleware.register(middlewareList)
+    this._middleware = this._middleware.concat(middlewareList)
     return this
   }
 

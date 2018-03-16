@@ -179,7 +179,7 @@ class Socket {
    * @return {void}
    */
   serverError (code, reason) {
-    this.emitter.emit('connection-error', { code, reason })
+    this.emitter.emit('error', { code, reason })
   }
 
   /**
