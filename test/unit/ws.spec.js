@@ -12,11 +12,15 @@
 const test = require('japa')
 const { Config } = require('@adonisjs/sink')
 const Ws = require('../../src/Ws')
+const middleware = require('../../src/Middleware')
 
 const helpers = require('../helpers')
 
 test.group('Ws', (group) => {
   group.afterEach(() => {
+    middleware._middleware.global = []
+    middleware._middleware.named = {}
+
     if (this.ws) {
       this.ws.close()
     }
@@ -127,6 +131,32 @@ test.group('Ws', (group) => {
         assert.equal(this.ws._connections.size, 0)
         done()
       }, 200)
+    })
+  })
+
+  test('register global middleware', (assert) => {
+    this.ws = new Ws(new Config())
+    this.ws.registerGlobal(['Adonis/Middleware/AuthInit'])
+
+    assert.deepEqual(middleware._middleware.global, [
+      {
+        namespace: 'Adonis/Middleware/AuthInit.wsHandle',
+        params: []
+      }
+    ])
+  })
+
+  test('register named middleware', (assert) => {
+    this.ws = new Ws(new Config())
+    this.ws.registerNamed({
+      auth: 'Adonis/Middleware/Auth'
+    })
+
+    assert.deepEqual(middleware._middleware.named, {
+      auth: {
+        namespace: 'Adonis/Middleware/Auth.wsHandle',
+        params: []
+      }
     })
   })
 })

@@ -10,15 +10,28 @@
 */
 
 const test = require('japa')
+const { setupResolver } = require('@adonisjs/sink')
+const { ioc } = require('@adonisjs/fold')
 
 const Channel = require('../../src/Channel')
 const Manager = require('../../src/Channel/Manager')
 const Socket = require('../../src/Socket')
+const middleware = require('../../src/Middleware')
 
 const helpers = require('../helpers')
 const FakeConnection = helpers.getFakeConnection()
 
-test.group('Channel', () => {
+test.group('Channel', (group) => {
+  group.beforeEach(() => {
+    ioc.restore()
+    middleware._middleware.global = []
+    middleware._middleware.named = {}
+  })
+
+  group.before(() => {
+    setupResolver()
+  })
+
   test('throw exception when channel doesn\'t have a name', (assert) => {
     const channel = () => new Channel()
     assert.throw(channel, 'E_INVALID_PARAMETER: Expected channel name to be string')
@@ -27,6 +40,59 @@ test.group('Channel', () => {
   test('throw exception when channel doesn\'t have a onConnect callback', (assert) => {
     const channel = () => new Channel('foo')
     assert.throw(channel, 'E_INVALID_PARAMETER: Expected channel callback to be a function')
+  })
+
+  test('bind channel controller when a string is passed', (assert, done) => {
+    assert.plan(1)
+    const ctx = {
+      socket: new Socket('chat', new FakeConnection())
+    }
+
+    class ChatController {
+      constructor (__ctx__) {
+        assert.deepEqual(__ctx__, ctx)
+        done()
+      }
+    }
+
+    ioc.bind('App/Controllers/Ws/ChatController', () => {
+      return ChatController
+    })
+
+    const channel = new Channel('chat', 'ChatController')
+    channel.joinTopic(ctx)
+  })
+
+  test('bind listeners automatically that are defined on the controller', (assert, done) => {
+    assert.plan(2)
+
+    const ctx = {
+      socket: new Socket('chat', new FakeConnection())
+    }
+
+    class ChatController {
+      onMessage () {
+      }
+
+      onClose () {
+      }
+    }
+
+    ioc.bind('App/Controllers/Ws/ChatController', () => {
+      return ChatController
+    })
+
+    const channel = new Channel('chat', 'ChatController')
+    channel
+      .joinTopic(ctx)
+      .then(() => {
+        process.nextTick(() => {
+          done(() => {
+            assert.equal(ctx.socket.emitter.listenerCount('message'), 1)
+            assert.equal(ctx.socket.emitter.listenerCount('close'), 2)
+          })
+        })
+      })
   })
 
   test('save topic and socket reference onJoin call', async (assert) => {
@@ -186,6 +252,92 @@ test.group('Channel', () => {
           done()
         }, 200)
       })
+  })
+
+  test('pass named middleware reference to channel', (assert, done) => {
+    const ctx = {
+      socket: new Socket('foo', new FakeConnection()),
+      joinStack: []
+    }
+
+    ioc.fake('Adonis/Middleware/Foo', () => {
+      class Foo {
+        async wsHandle (__ctx__, next) {
+          __ctx__.joinStack.push(1)
+          await next()
+        }
+      }
+      return new Foo()
+    })
+
+    ioc.fake('Adonis/Middleware/Bar', () => {
+      class Bar {
+        async wsHandle (__ctx__, next) {
+          __ctx__.joinStack.push(2)
+          await next()
+        }
+      }
+      return new Bar()
+    })
+
+    middleware.registerNamed({
+      foo: 'Adonis/Middleware/Foo',
+      bar: 'Adonis/Middleware/Bar'
+    })
+
+    const channel = new Channel('foo', function (__ctx__) {
+      __ctx__.joinStack.push(3)
+    })
+
+    channel.middleware(['foo', 'bar'])
+
+    channel
+      .joinTopic(ctx)
+      .then(() => {
+        process.nextTick(() => {
+          assert.deepEqual(ctx.joinStack, [1, 2, 3])
+          done()
+        })
+      })
+      .catch(done)
+  })
+
+  test('pass runtime params to middleware', (assert, done) => {
+    const ctx = {
+      socket: new Socket('foo', new FakeConnection()),
+      joinStack: []
+    }
+
+    ioc.fake('Adonis/Middleware/Foo', () => {
+      class Foo {
+        async wsHandle (__ctx__, next, params) {
+          __ctx__.joinStack = __ctx__.joinStack.concat(params)
+          await next()
+        }
+      }
+      return new Foo()
+    })
+
+    middleware.registerNamed({
+      foo: 'Adonis/Middleware/Foo'
+    })
+
+    const channel = new Channel('foo', function (__ctx__) {
+      __ctx__.joinStack.push('done')
+    })
+
+    channel.middleware(['foo:first', 'foo:second'])
+
+    channel
+      .joinTopic(ctx)
+      .then(() => {
+        process.nextTick(() => {
+          done(() => {
+            assert.deepEqual(ctx.joinStack, ['first', 'second', 'done'])
+          })
+        })
+      })
+      .catch(done)
   })
 })
 

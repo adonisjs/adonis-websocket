@@ -15,6 +15,7 @@ const Connection = require('../Connection')
 const ClusterHop = require('../ClusterHop')
 const ChannelManager = require('../Channel/Manager')
 const JsonEncoder = require('../JsonEncoder')
+const middleware = require('../Middleware')
 
 /**
  * The websocket server is a wrapper over `ws` node library and
@@ -32,7 +33,6 @@ class Ws {
       serverAttempts: 3,
       clientInterval: 25000,
       clientAttempts: 3,
-      allowNoChannels: false,
       encoder: JsonEncoder
     })
 
@@ -252,6 +252,47 @@ class Ws {
       this._wsServer.close()
       this._clearTimer()
     }
+  }
+
+  /**
+   * Register an array of global middleware
+   *
+   * @method registerGlobal
+   *
+   * @param  {Array}       list
+   *
+   * @chainable
+   *
+   * @example
+   * ```js
+   * Ws.registerGlobal([
+   *   'Adonis/Middleware/AuthInit'
+   * ])
+   * ```
+   */
+  registerGlobal (list) {
+    middleware.registerGlobal(list)
+    return this
+  }
+
+  /**
+   * Register a list of named middleware
+   *
+   * @method registerNamed
+   *
+   * @param  {Object}      list
+   *
+   * @chainable
+   *
+   * ```js
+   * Ws.registerNamed({
+   *   auth: 'Adonis/Middleware/Auth'
+   * })
+   * ```
+   */
+  registerNamed (list) {
+    middleware.registerNamed(list)
+    return this
   }
 }
 

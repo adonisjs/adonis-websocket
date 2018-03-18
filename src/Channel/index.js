@@ -10,8 +10,8 @@
 */
 
 const GE = require('@adonisjs/generic-exceptions')
-const Middleware = require('co-compose')
 const debug = require('debug')('adonis:websocket')
+const middleware = require('../Middleware')
 
 /**
  * Channel class gives a simple way to divide the application
@@ -26,7 +26,20 @@ class Channel {
   constructor (name, onConnect) {
     this._validateArguments(name, onConnect)
     this.name = name
+
     this._onConnect = onConnect
+
+    /**
+     * If channel controller is an ES6 class, then we let users
+     * define listeners using a convention by prefixing `on`
+     * in front of their methods.
+     *
+     * Instead of re-findings these listeners again and again on
+     * the class prototype, we just pull them for once.
+     *
+     * @type {Array}
+     */
+    this._channelControllerListeners = []
 
     /**
      * All of the channel subscriptions are grouped
@@ -41,10 +54,9 @@ class Channel {
     this.subscriptions = new Map()
 
     /**
-     * Middleware to be executed when someone attempts to join
-     * a topic
+     * Named middleware defined on the channel
      */
-    this._middleware = new Middleware()
+    this._middleware = []
 
     /**
      * The method attached as an event listener to each
@@ -79,7 +91,7 @@ class Channel {
       throw GE.InvalidArgumentException.invalidParameter('Expected channel name to be string')
     }
 
-    if (typeof (onConnect) !== 'function') {
+    if (typeof (onConnect) !== 'function' && typeof (onConnect) !== 'string') {
       throw GE.InvalidArgumentException.invalidParameter('Expected channel callback to be a function')
     }
   }
@@ -96,10 +108,55 @@ class Channel {
    * @private
    */
   _executeMiddleware (context) {
-    if (!this._middleware.list.length) {
-      return Promise.resolve()
+    return middleware
+      .composeGlobalAndNamed(this._middleware)
+      .params([context])
+      .run()
+  }
+
+  /**
+   * Returns the channel controller Class when it is a string.
+   *
+   * This method relies of the globals of `ioc container`.
+   *
+   * @method _getChannelController
+   *
+   * @return {Class}
+   *
+   * @private
+   */
+  _getChannelController () {
+    const namespace = global.iocResolver.forDir('wsControllers').translate(this._onConnect)
+    return global.use(namespace)
+  }
+
+  /**
+   * Returns the listeners on the controller class
+   *
+   * @method _getChannelControllerListeners
+   *
+   * @param  {Class}                       Controller
+   *
+   * @return {Array}
+   *
+   * @private
+   */
+  _getChannelControllerListeners (Controller) {
+    if (!this._channelControllerListeners.length) {
+      /**
+       * Looping over each method of the class prototype
+       * and pulling listeners from them
+       */
+      this._channelControllerListeners = Object
+        .getOwnPropertyNames(Controller.prototype)
+        .filter((method) => method.startsWith('on') && method !== 'on')
+        .map((method) => {
+          const eventName = method.replace(/^on(\w)/, (match, group) => group.toLowerCase())
+          return { eventName, method }
+        })
     }
-    return this._middleware.runner().params([context]).run()
+
+    return this._channelControllerListeners
   }
 
   /**
@@ -154,11 +211,33 @@ class Channel {
     context.socket.on('close', this.deleteSubscription)
 
     /**
+     * When the onConnect handler is a plain function
+     */
+    if (typeof (this._onConnect) === 'function') {
+      process.nextTick(() => {
+        this._onConnect(context)
+      })
+      return
+    }
+
+    /**
+     * When onConnect handler is a reference to the channel
+     * controler
+     */
+    const Controller = this._getChannelController()
+    const controllerListeners = this._getChannelControllerListeners(Controller)
+
+    /**
      * Calling onConnect in the next tick, so that the parent
      * connection saves a reference to it, before the closure
      * is executed.
      */
-    process.nextTick(() => (this._onConnect(context)))
+    process.nextTick(() => {
+      const controller = new Controller(context)
+      controllerListeners.forEach((item) => {
+        context.socket.on(item.eventName, controller[item.method].bind(controller))
+      })
+    })
   }
 
   /**
@@ -173,7 +252,7 @@ class Channel {
    */
   middleware (middleware) {
     const middlewareList = Array.isArray(middleware) ? middleware : [middleware]
-    this._middleware.register(middlewareList)
+    this._middleware = this._middleware.concat(middlewareList)
     return this
   }
 
