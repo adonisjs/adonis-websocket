@@ -160,6 +160,46 @@ class Channel {
   }
 
   /**
+   * Invokes the onConnect handler for the channel.
+   *
+   * @method _callOnConnect
+   *
+   * @param  {Object}       context
+   *
+   * @return {void}
+   */
+  _callOnConnect (context) {
+    /**
+     * When the onConnect handler is a plain function
+     */
+    if (typeof (this._onConnect) === 'function') {
+      process.nextTick(() => {
+        this._onConnect(context)
+      })
+      return
+    }
+
+    /**
+     * When onConnect handler is a reference to the channel
+     * controler
+     */
+    const Controller = this._getChannelController()
+    const controllerListeners = this._getChannelControllerListeners(Controller)
+
+    /**
+     * Calling onConnect in the next tick, so that the parent
+     * connection saves a reference to it, before the closure
+     * is executed.
+     */
+    process.nextTick(() => {
+      const controller = new Controller(context)
+      controllerListeners.forEach((item) => {
+        context.socket.on(item.eventName, controller[item.method].bind(controller))
+      })
+    })
+  }
+
+  /**
    * Returns the subscriptions set for a given topic. If there are no
    * subscriptions, an empty set will be initialized and returned.
    *
@@ -210,34 +250,7 @@ class Channel {
      */
     context.socket.on('close', this.deleteSubscription)
 
-    /**
-     * When the onConnect handler is a plain function
-     */
-    if (typeof (this._onConnect) === 'function') {
-      process.nextTick(() => {
-        this._onConnect(context)
-      })
-      return
-    }
-
-    /**
-     * When onConnect handler is a reference to the channel
-     * controler
-     */
-    const Controller = this._getChannelController()
-    const controllerListeners = this._getChannelControllerListeners(Controller)
-
-    /**
-     * Calling onConnect in the next tick, so that the parent
-     * connection saves a reference to it, before the closure
-     * is executed.
-     */
-    process.nextTick(() => {
-      const controller = new Controller(context)
-      controllerListeners.forEach((item) => {
-        context.socket.on(item.eventName, controller[item.method].bind(controller))
-      })
-    })
+    this._callOnConnect(context)
   }
 
   /**
