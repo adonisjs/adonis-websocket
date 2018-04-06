@@ -180,6 +180,19 @@ class Ws {
   }
 
   /**
+   * Returns channel instance for a given channel
+   *
+   * @method getChannel
+   *
+   * @param  {String}   name
+   *
+   * @return {Channel}
+   */
+  getChannel (name) {
+    return ChannelManager.get(name)
+  }
+
+  /**
    * Handle a new connection
    *
    * @method handle

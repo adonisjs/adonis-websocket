@@ -544,4 +544,14 @@ test.group('Channel Manager', (group) => {
     Manager.add('chat', function () {})
     assert.isNull(Manager.resolve('chat:watercooler'))
   })
+
+  test('get channel for a static name', (assert) => {
+    const channel = Manager.add('chat', function () {})
+    assert.deepEqual(Manager.get('chat'), channel)
+  })
+
+  test('get channel for a wildcard name', (assert) => {
+    const channel = Manager.add('chat:*', function () {})
+    assert.deepEqual(Manager.get('chat:*'), channel)
+  })
 })

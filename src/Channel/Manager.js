@@ -96,6 +96,19 @@ class ChannelsManager {
   }
 
   /**
+   * Returns an existing channel instance
+   *
+   * @method get
+   *
+   * @param  {String} name
+   *
+   * @return {Channel}
+   */
+  get (name) {
+    return this.channels.get(name)
+  }
+
+  /**
    * Returns channel for a given topic
    *
    * @method resolve
