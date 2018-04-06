@@ -1,3 +1,25 @@
+<a name="1.0.9"></a>
+## [1.0.9](https://github.com/adonisjs/adonis-websocket/compare/v1.0.8...v1.0.9) (2018-04-06)
+
+
+### Features
+
+* **channel:** add option to broadcast from channel directly ([5a3464c](https://github.com/adonisjs/adonis-websocket/commit/5a3464c))
+* **channel:** expose get & getChannel methods to get channel instance ([6d23355](https://github.com/adonisjs/adonis-websocket/commit/6d23355))
+
+
+
+<a name="1.0.9"></a>
+## [1.0.9](https://github.com/adonisjs/adonis-websocket/compare/v1.0.8...v1.0.9) (2018-04-06)
+
+
+### Features
+
+* **channel:** add option to broadcast from channel directly ([5a3464c](https://github.com/adonisjs/adonis-websocket/commit/5a3464c))
+* **channel:** expose get & getChannel methods to get channel instance ([6d23355](https://github.com/adonisjs/adonis-websocket/commit/6d23355))
+
+
+
 <a name="1.0.8"></a>
 ## [1.0.8](https://github.com/adonisjs/adonis-websocket/compare/v1.0.7...v1.0.8) (2018-03-21)
 

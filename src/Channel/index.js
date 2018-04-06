@@ -217,6 +217,20 @@ class Channel {
   }
 
   /**
+   * Returns the first subscription from all the existing subscriptions
+   *
+   * @method getFirstSubscription
+   *
+   * @param  {String}             topic
+   *
+   * @return {Socket}
+   */
+  getFirstSubscription (topic) {
+    const subscriptions = this.getTopicSubscriptions(topic)
+    return subscriptions.values().next().value
+  }
+
+  /**
    * Join a topic by saving the subscription reference. This method
    * will execute the middleware chain before saving the
    * subscription reference and invoking the onConnect
@@ -270,19 +284,86 @@ class Channel {
   }
 
   /**
+   * Scope broadcasting to a given topic
+   *
+   * @method topic
+   *
+   * @param  {String} topic
+   *
+   * @return {Object|Null}
+   */
+  topic (topic) {
+    const socket = this.getFirstSubscription(topic)
+    if (!socket) {
+      return null
+    }
+
+    return {
+      socket,
+      /**
+       * Broadcast to everyone
+       *
+       * @method broadcast
+       * @alias broadcastToAll
+       *
+       * @param  {String}  event
+       * @param  {Mixed}  data
+       *
+       * @return {void}
+       */
+      broadcast (event, data) {
+        this.socket.broadcastToAll(event, data)
+      },
+
+      /**
+       * Broadcast to everyone
+       *
+       * @method broadcastToAll
+       *
+       * @param  {String}       event
+       * @param  {Mixed}       data
+       *
+       * @return {void}
+       */
+      broadcastToAll (event, data) {
+        this.socket.broadcastToAll(event, data)
+      },
+
+      /**
+       * emit to certain ids
+       *
+       * @method emitTo
+       *
+       * @param  {String}    event
+       * @param  {Mixed}     data
+       * @param  {Array}     ids
+       *
+       * @return {void}
+       */
+      emitTo (event, data, ids) {
+        this.socket.emitTo(event, data, ids)
+      }
+    }
+  }
+
+  /**
    * Broadcast event message to a given topic.
    *
-   * @method broadcast
+   * @method broadcastPayload
    *
-   * @param  {String}  topic
-   * @param  {String}  payload
-   * @param  {Array}   filterSockets
+   * @param  {String}    topic
+   * @param  {String}    payload
+   * @param  {Array}     filterSockets
+   * @param  {Boolean}   inverse
    *
    * @return {void}
    */
-  broadcast (topic, payload, filterSockets = []) {
+  broadcastPayload (topic, payload, filterSockets = [], inverse) {
     this.getTopicSubscriptions(topic).forEach((socket) => {
-      if (filterSockets.indexOf(socket.id) === -1) {
+      const socketIndex = filterSockets.indexOf(socket.id)
+      const shouldSend = inverse ? socketIndex > -1 : socketIndex === -1
+
+      if (shouldSend) {
         socket.connection.write(payload)
       }
     })
