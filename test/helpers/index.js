@@ -40,10 +40,10 @@ module.exports = {
         this.name = name
       }
 
-      broadcast (topic, event, data, filterSockets = []) {
+      broadcastPayload (topic, payload, filterSockets = []) {
         this.subscriptions.get(topic).forEach((socket) => {
           if (filterSockets.indexOf(socket.id) === -1) {
-            socket.emit(event, data)
+            socket.connection.write(payload)
           }
         })
       }

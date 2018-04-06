@@ -229,7 +229,7 @@ test.group('Channel', (group) => {
     channel
       .joinTopic(ctx)
       .then(() => {
-        channel.broadcast('foo', 'hello')
+        channel.broadcastPayload('foo', 'hello')
       })
   })
 
@@ -247,7 +247,7 @@ test.group('Channel', (group) => {
     channel
       .joinTopic(ctx)
       .then(() => {
-        channel.broadcast('bar', 'hello')
+        channel.broadcastPayload('bar', 'hello')
         setTimeout(() => {
           done()
         }, 200)
@@ -338,6 +338,136 @@ test.group('Channel', (group) => {
         })
       })
       .catch(done)
+  })
+
+  test('broadcast message inside a topic', (assert, done) => {
+    assert.plan(1)
+
+    const connection = new FakeConnection()
+    connection.write = function (payload) {
+      done(() => {
+        assert.deepEqual(payload, { topic: 'foo', event: 'greeting', data: 'hello' })
+      })
+    }
+
+    const ctx = {
+      socket: new Socket('foo', connection)
+    }
+
+    const channel = new Channel('foo', function () {})
+    channel
+      .joinTopic(ctx)
+      .then(() => {
+        channel.topic('foo').broadcastToAll('greeting', 'hello')
+      })
+  })
+
+  test('broadcast message to all sockets', (assert, done) => {
+    assert.plan(1)
+    const payloads = []
+
+    const write = function (payload) {
+      payloads.push(payload)
+
+      if (payloads.length === 2) {
+        done(() => {
+          assert.deepEqual(payload, { topic: 'foo', event: 'greeting', data: 'hello' })
+        })
+      }
+    }
+
+    const connection = new FakeConnection()
+    connection.write = write
+    const ctx = {
+      socket: new Socket('foo', connection)
+    }
+
+    const connection1 = new FakeConnection()
+    connection1.write = write
+    const ctx1 = {
+      socket: new Socket('foo', connection)
+    }
+
+    const channel = new Channel('foo', function () {})
+
+    channel
+      .joinTopic(ctx1)
+      .then(() => {
+        return channel.joinTopic(ctx)
+      })
+      .then(() => {
+        channel.topic('foo').broadcastToAll('greeting', 'hello')
+      })
+  })
+
+  test('broadcast message to only selected socket ids', (assert, done) => {
+    assert.plan(1)
+    const write = function (payload) {
+      done(() => {
+        assert.deepEqual(payload, { topic: 'foo', event: 'greeting', data: 'hello' })
+      })
+    }
+
+    const connection = new FakeConnection()
+    connection.write = write
+    const ctx = {
+      socket: new Socket('foo', connection)
+    }
+
+    const connection1 = new FakeConnection()
+    connection1.write = function () {
+      done(new Error('Never expected to be called'))
+    }
+
+    const ctx1 = {
+      socket: new Socket('foo', connection)
+    }
+
+    const channel = new Channel('foo', function () {})
+
+    channel
+      .joinTopic(ctx1)
+      .then(() => {
+        return channel.joinTopic(ctx)
+      })
+      .then(() => {
+        channel.topic('foo').emitTo('greeting', 'hello', [ctx.socket.id])
+      })
+  })
+
+  test('emit to ignore ids that are unknow', (assert, done) => {
+    assert.plan(1)
+    const write = function (payload) {
+      done(() => {
+        assert.deepEqual(payload, { topic: 'foo', event: 'greeting', data: 'hello' })
+      })
+    }
+
+    const connection = new FakeConnection()
+    connection.write = write
+    const ctx = {
+      socket: new Socket('foo', connection)
+    }
+
+    const connection1 = new FakeConnection()
+    connection1.write = function () {
+      done(new Error('Never expected to be called'))
+    }
+
+    const ctx1 = {
+      socket: new Socket('foo', connection)
+    }
+
+    const channel = new Channel('foo', function () {})
+
+    channel
+      .joinTopic(ctx1)
+      .then(() => {
+        return channel.joinTopic(ctx)
+      })
+      .then(() => {
+        channel.topic('foo').emitTo('greeting', 'hello', [20, 40, 60, ctx.socket.id])
+      })
   })
 })
 

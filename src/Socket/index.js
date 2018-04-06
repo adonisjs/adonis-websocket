@@ -11,6 +11,7 @@
 
 const Emittery = require('emittery')
 const debug = require('debug')('adonis:websocket')
+const GE = require('@adonisjs/generic-exceptions')
 const ClusterHop = require('../ClusterHop')
 
 /**
@@ -136,7 +137,7 @@ class Socket {
       if (error) {
         return
       }
-      this.channel.broadcast(this.topic, payload, [this.id])
+      this.channel.broadcastPayload(this.topic, payload, [this.id])
       ClusterHop.send('broadcast', this.topic, payload)
     })
   }
@@ -163,7 +164,38 @@ class Socket {
       if (error) {
         return
       }
-      this.channel.broadcast(this.topic, payload, [])
+      this.channel.broadcastPayload(this.topic, payload, [])
+      ClusterHop.send('broadcast', this.topic, payload)
+    })
+  }
+
+  /**
+   * Emit event to selected socket ids
+   *
+   * @method emitTo
+   *
+   * @param  {String} event
+   * @param  {Mixed}  data
+   * @param  {Array}  ids
+   *
+   * @return {void}
+   */
+  emitTo (event, data, ids) {
+    if (!Array.isArray(ids)) {
+      throw GE.InvalidArgumentException.invalidParameter('emitTo expects 3rd parameter to be an array of socket ids', ids)
+    }
+
+    const packet = this.connection.makeEventPacket(this.topic, event, data)
+
+    /**
+     * Encoding the packet before hand, so that we don't pay the penalty of
+     * re-encoding the same message again and again
+     */
+    this.connection.encodePacket(packet, (error, payload) => {
+      if (error) {
+        return
+      }
+      this.channel.broadcastPayload(this.topic, payload, ids, true)
       ClusterHop.send('broadcast', this.topic, payload)
     })
   }

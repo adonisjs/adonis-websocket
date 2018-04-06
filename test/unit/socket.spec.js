@@ -99,7 +99,7 @@ test.group('Socket emitting', () => {
     const socket1 = new Socket('chat', new FakeConnection())
 
     const channel = new FakeChannel('chat')
-    channel.broadcast = function (topic, payload, filterIds) {
+    channel.broadcastPayload = function (topic, payload, filterIds) {
       done(() => {
         assert.equal(topic, 'chat')
         assert.deepEqual(payload, { topic: 'chat', event: 'hello', data: 'world' })
@@ -120,7 +120,7 @@ test.group('Socket emitting', () => {
     const socket1 = new Socket('chat', new FakeConnection())
 
     const channel = new FakeChannel('chat')
-    channel.broadcast = function (topic, payload, filterIds) {
+    channel.broadcastPayload = function (topic, payload, filterIds) {
       done(() => {
         assert.equal(topic, 'chat')
         assert.deepEqual(payload, { topic: 'chat', event: 'hello', data: 'world' })
@@ -132,5 +132,39 @@ test.group('Socket emitting', () => {
     socket1.associateChannel(channel)
 
     socket.broadcastToAll('hello', 'world')
+  })
+
+  test('broadcast message to selected socket ids', (assert, done) => {
+    assert.plan(4)
+
+    const socket = new Socket('chat', new FakeConnection())
+    const socket1 = new Socket('chat', new FakeConnection())
+    const socket2 = new Socket('chat', new FakeConnection())
+
+    const channel = new FakeChannel('chat')
+    channel.broadcastPayload = function (topic, payload, filterIds, inverse) {
+      done(() => {
+        assert.equal(topic, 'chat')
+        assert.deepEqual(payload, { topic: 'chat', event: 'hello', data: 'world' })
+        assert.deepEqual(filterIds, [socket1.id, socket2.id])
+        assert.isTrue(inverse)
+      })
+    }
+
+    socket.associateChannel(channel)
+    socket1.associateChannel(channel)
+    socket2.associateChannel(channel)
+
+    socket.emitTo('hello', 'world', [socket1.id, socket2.id])
+  })
+
+  test('throw exception when ids array is not passed to emitTo', (assert) => {
+    const socket = new Socket('chat', new FakeConnection())
+    const channel = new FakeChannel('chat')
+
+    socket.associateChannel(channel)
+
+    const fn = () => socket.emitTo('hello', 'world')
+    assert.throw(fn, /E_INVALID_PARAMETER: emitTo expects 3rd parameter to be an array of socket ids/)
   })
 })
