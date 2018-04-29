@@ -84,6 +84,15 @@ class Ws {
      * @type {Timer}
      */
     this._heartBeatTimer = null
+
+    /**
+     * Expose the server path
+     */
+    Object.defineProperty(this, 'path', {
+      get () {
+        return this._serverOptions.path
+      }
+    })
   }
 
   /**
@@ -233,12 +242,13 @@ class Ws {
    *
    * @method listen
    *
-   * @param  {Http.Server} server
+   * @param  {Http.Server|null} server
    *
    * @return {void}
    */
-  listen (server) {
-    this._wsServer = new WebSocket.Server(Object.assign({}, this._serverOptions, { server }))
+  listen (server = null) {
+    const serverDefinition = server !== null ? {server} : {noServer: true}
+    this._wsServer = new WebSocket.Server(Object.assign({}, this._serverOptions, serverDefinition))
 
     /**
      * Listening for new connections
@@ -247,6 +257,21 @@ class Ws {
 
     this._registerTimer()
     ClusterHop.init()
+  }
+
+  /**
+   * Upgrade connection with an external server
+   *
+   * @param server
+   * @param request
+   * @param socket
+   * @param head
+   */
+  handleUpgrade (server, request, socket, head) {
+    this._wsServer.handleUpgrade(request, socket, head, (ws) => {
+      this._wsServer.server = server
+      this._wsServer.emit('connection', ws, request)
+    })
   }
 
   /**
