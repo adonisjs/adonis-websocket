@@ -84,15 +84,16 @@ class Ws {
      * @type {Timer}
      */
     this._heartBeatTimer = null
+  }
 
-    /**
-     * Expose the server path
-     */
-    Object.defineProperty(this, 'path', {
-      get () {
-        return this._serverOptions.path
-      }
-    })
+  /**
+   * Expose the server path defined in config file
+   *
+   * @readonly
+   * @return {string}
+   */
+  get path () {
+    return this._serverOptions.path
   }
 
   /**
