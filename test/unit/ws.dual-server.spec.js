@@ -35,6 +35,23 @@ test.group('Ws-dual-server', (group) => {
     }
   })
 
+  test('the ws path should be exposed on the ws server', (assert, done) => {
+    this.ws1 = new Ws(new Config())
+    assert.equal(this.ws1.path, '/adonis-ws')
+
+    done()
+  })
+
+  test('the ws path should not be editable', (assert, done) => {
+    this.ws1 = new Ws(new Config())
+
+    assert.throws(() => {
+      this.ws1.path = '/wrong-path'
+    }, TypeError)
+
+    done()
+  })
+
   test('start server to accept new connections without internal http server', (assert, done) => {
     this.ws1 = new Ws(new Config())
     this.httpServer = helpers.startHttpServer()
