@@ -1,3 +1,8 @@
+<a name="1.0.10"></a>
+## [1.0.10](https://github.com/adonisjs/adonis-websocket/compare/v1.0.9...v1.0.10) (2018-06-02)
+
+
+
 <a name="1.0.9"></a>
 ## [1.0.9](https://github.com/adonisjs/adonis-websocket/compare/v1.0.8...v1.0.9) (2018-04-06)
 
