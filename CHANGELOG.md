@@ -1,3 +1,13 @@
+<a name="1.0.11"></a>
+## [1.0.11](https://github.com/adonisjs/adonis-websocket/compare/v1.0.10...v1.0.11) (2018-07-17)
+
+
+### Bug Fixes
+
+* **server:** allow trailing slashes in request url ([fb61e56](https://github.com/adonisjs/adonis-websocket/commit/fb61e56)), closes [#57](https://github.com/adonisjs/adonis-websocket/issues/57)
+
+
+
 <a name="1.0.10"></a>
 ## [1.0.10](https://github.com/adonisjs/adonis-websocket/compare/v1.0.9...v1.0.10) (2018-06-02)
 
