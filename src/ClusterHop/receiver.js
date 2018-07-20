@@ -11,6 +11,7 @@
 
 const ChannelsManager = require('../Channel/Manager')
 const debug = require('debug')('adonis:websocket')
+const { deserialize } = require('./serializer')
 
 /**
  * Delivers the message from process to the channel
@@ -54,9 +55,9 @@ module.exports = function handleProcessMessage (message) {
    * Decoding the JSON message
    */
   try {
-    decoded = JSON.parse(message)
+    decoded = deserialize(message)
   } catch (error) {
-    debug('dropping packet, since not valid json')
+    debug('dropping packet, since it is not valid')
     return
   }
 
