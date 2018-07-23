@@ -20,10 +20,11 @@ const debug = require('debug')('adonis:websocket')
  * @param  {String}       handle
  * @param  {String}       topic
  * @param  {String}       payload
+ * @param  {Object}       args
  *
  * @return {void}
  */
-function deliverMessage (handle, topic, payload) {
+function deliverMessage (handle, topic, payload, args = {}) {
   if (handle === 'broadcast') {
     const channel = ChannelsManager.resolve(topic)
 
@@ -31,7 +32,7 @@ function deliverMessage (handle, topic, payload) {
       return debug('broadcast topic %s cannot be handled by any channel', topic)
     }
 
-    channel.clusterBroadcast(topic, payload)
+    channel.clusterBroadcast(topic, payload, args)
     return
   }
 
@@ -72,7 +73,7 @@ module.exports = function handleProcessMessage (message) {
    * Safely trying to deliver cluster messages
    */
   try {
-    deliverMessage(decoded.handle, decoded.topic, decoded.payload)
+    deliverMessage(decoded.handle, decoded.topic, decoded.payload, decoded.args)
   } catch (error) {
     debug('unable to process cluster message with error %o', error)
   }

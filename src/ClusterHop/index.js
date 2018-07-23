@@ -38,12 +38,13 @@ module.exports = {
    * @param  {String} handle
    * @param  {String} topic
    * @param  {Object} payload
+   * @param  {Object} args
    *
    * @return {void}
    */
-  send (handle, topic, payload) {
+  send (handle, topic, payload, args = {}) {
     if (cluster.isWorker) {
-      sender(handle, topic, payload)
+      sender(handle, topic, payload, args)
     }
   },
 
