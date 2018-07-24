@@ -221,6 +221,14 @@ class Connection extends Emittery {
     }
 
     /**
+     * Ack packet
+     */
+    if (msp.isAckPacket(packet)) {
+      this._processAck(packet)
+      return
+    }
+
+    /**
      * Ping from client
      */
     if (msp.isPingPacket(packet)) {
@@ -247,12 +255,46 @@ class Connection extends Emittery {
       return
     }
 
-    if (!this.hasSubscription(packet.d.topic)) {
+    const { topic, id } = packet.d
+
+    if (!this.hasSubscription(topic)) {
       this._notifyPacketDropped('_processEvent', 'dropping event since there are no subscription %j', packet)
       return
     }
 
-    this.getSubscription(packet.d.topic).serverMessage(packet.d)
+    const result = this.getSubscription(topic).serverMessage(packet.d)
+
+    if (typeof (id) !== 'undefined') {
+      result.then((responses) => {
+        const data = responses.find((response) => typeof (response) !== 'undefined')
+
+        this.sendAckPacket(topic, id, data)
+      })
+    }
+  }
+
+  /**
+   * Processes the ack by ensuring the packet is valid and there
+   * is a subscription for the given topic.
+   *
+   * @method _processAck
+   *
+   * @param  {Object}      packet
+   *
+   * @return {void}
+   */
+  _processAck (packet) {
+    if (!msp.isValidAckPacket(packet)) {
+      this._notifyPacketDropped('_processAck', 'dropping ack since packet is invalid %j', packet)
+      return
+    }
+
+    if (!this.hasSubscription(packet.d.topic)) {
+      this._notifyPacketDropped('_processAck', 'dropping ack since there are no subscription %j', packet)
+      return
+    }
+
+    this.getSubscription(packet.d.topic).serverAck(packet.d)
   }
 
   /**
@@ -606,6 +648,22 @@ class Connection extends Emittery {
   }
 
   /**
+   * Sends the ack packet, when the client requested the
+   * response for given event.
+   *
+   * @method sendAckPacket
+   *
+   * @param  {String}  topic
+   * @param  {Number}  id
+   * @param  {Mixed}   data
+   *
+   * @return {void}
+   */
+  sendAckPacket (topic, id, data) {
+    this.sendPacket(msp.ackPacket(topic, id, data))
+  }
+
+  /**
    * Makes the event packet from the topic and the
    * body
    *
@@ -614,10 +672,11 @@ class Connection extends Emittery {
    * @param  {String}        topic
    * @param  {String}        event
    * @param  {Mixed}         data
+   * @param  {Number}        [id]
    *
    * @return {Object}
    */
-  makeEventPacket (topic, event, data) {
+  makeEventPacket (topic, event, data, id) {
     if (!topic) {
       throw new Error('Cannot send event without a topic')
     }
@@ -626,7 +685,7 @@ class Connection extends Emittery {
       throw new Error(`Topic ${topic} doesn't have any active subscriptions`)
     }
 
-    return msp.eventPacket(topic, event, data)
+    return msp.eventPacket(topic, event, data, id)
   }
 
   /**
@@ -638,11 +697,12 @@ class Connection extends Emittery {
    * @param  {String}    event
    * @param  {Mixed}     data
    * @param  {Function}  [ack]
+   * @param  {Number}    [id]
    *
    * @return {void}
    */
-  sendEvent (topic, event, data, ack) {
-    this.sendPacket(this.makeEventPacket(topic, event, data), {}, ack)
+  sendEvent (topic, event, data, ack, id) {
+    this.sendPacket(this.makeEventPacket(topic, event, data, id), {}, ack)
   }
 
   /**
