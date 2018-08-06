@@ -229,4 +229,21 @@ test.group('Ws-dual-server', (group) => {
       }
     })
   })
+
+  test('work fine with slash in the end', (assert, done) => {
+    this.ws1 = new Ws(new Config())
+    this.httpServer = helpers.startHttpServer()
+    this.ws1.listen()
+
+    this.httpServer.on('upgrade', (request, socket, head) => {
+      if (url.parse(request.url).pathname) {
+        this.ws1.handleUpgrade(this.httpServer, request, socket, head)
+      } else {
+        socket.destroy()
+      }
+    })
+
+    const client = helpers.startClient({}, '/adonis-ws/')
+    client.on('open', () => done())
+  })
 })
