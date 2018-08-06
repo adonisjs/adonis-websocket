@@ -159,4 +159,13 @@ test.group('Ws', (group) => {
       }
     })
   })
+
+  test('work fine with slash in the end', (assert, done) => {
+    this.ws = new Ws(new Config())
+    this.httpServer = helpers.startHttpServer()
+    this.ws.listen(this.httpServer)
+
+    const client = helpers.startClient({}, '/adonis-ws/')
+    client.on('open', () => done())
+  })
 })

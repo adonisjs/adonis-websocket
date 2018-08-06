@@ -10,6 +10,7 @@
 */
 
 const WebSocket = require('ws')
+const url = require('url')
 const GE = require('@adonisjs/generic-exceptions')
 const Connection = require('../Connection')
 const ClusterHop = require('../ClusterHop')
@@ -250,6 +251,13 @@ class Ws {
   listen (server = null) {
     const serverDefinition = server !== null ? {server} : {noServer: true}
     this._wsServer = new WebSocket.Server(Object.assign({}, this._serverOptions, serverDefinition))
+
+    /**
+     * Override the shouldHandle method to allow trailing slashes
+     */
+    this._wsServer.shouldHandle = function (req) {
+      return this.options.path && url.parse(req.url).pathname.replace(/\/$/, '') === this.options.path
+    }
 
     /**
      * Listening for new connections

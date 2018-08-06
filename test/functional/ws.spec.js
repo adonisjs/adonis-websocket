@@ -335,7 +335,7 @@ test.group('Ws', (group) => {
     const client2 = helpers.startClient({}, '/adonis-ws')
     client2.on('open', () => joinChannel(client2))
     client2.on('message', onMessage)
-  })
+  }).timeout(0)
 
   test('broadcast messages to all clients', (assert, done) => {
     let connectedClients = []
@@ -448,5 +448,12 @@ test.group('Ws', (group) => {
     const client2 = helpers.startClient({}, '/adonis-ws')
     client2.on('open', () => joinChannel(client2, 'chat:frontend'))
     client2.on('message', onMessage)
+  })
+
+  test('work fine with slash in the end', (assert, done) => {
+    const client = helpers.startClient({}, '/adonis-ws/')
+    client.on('open', () => {
+      done()
+    })
   })
 })
