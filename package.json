@@ -14,7 +14,6 @@
   "scripts": {
     "mrm": "mrm --preset=@adonisjs/mrm-preset",
     "pretest": "npm run lint",
-    "posttest": "npm run coverage",
     "test": "nyc japa",
     "test:win": "node ./node_modules/japa-cli/index.js",
     "commit": "git-cz",
