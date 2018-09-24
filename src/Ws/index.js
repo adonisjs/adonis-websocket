@@ -88,6 +88,16 @@ class Ws {
   }
 
   /**
+   * Expose the server path defined in config file
+   *
+   * @readonly
+   * @return {string}
+   */
+  get path () {
+    return this._serverOptions.path
+  }
+
+  /**
    * Verifies the handshake of a new connection.
    *
    * @method _verifyClient
@@ -234,12 +244,13 @@ class Ws {
    *
    * @method listen
    *
-   * @param  {Http.Server} server
+   * @param  {Http.Server|null} server
    *
    * @return {void}
    */
-  listen (server) {
-    this._wsServer = new WebSocket.Server(Object.assign({}, this._serverOptions, { server }))
+  listen (server = null) {
+    const serverDefinition = server !== null ? {server} : {noServer: true}
+    this._wsServer = new WebSocket.Server(Object.assign({}, this._serverOptions, serverDefinition))
 
     /**
      * Override the shouldHandle method to allow trailing slashes
@@ -255,6 +266,21 @@ class Ws {
 
     this._registerTimer()
     ClusterHop.init()
+  }
+
+  /**
+   * Upgrade connection with an external server
+   *
+   * @param server
+   * @param request
+   * @param socket
+   * @param head
+   */
+  handleUpgrade (server, request, socket, head) {
+    this._wsServer.handleUpgrade(request, socket, head, (ws) => {
+      this._wsServer.server = server
+      this._wsServer.emit('connection', ws, request)
+    })
   }
 
   /**
