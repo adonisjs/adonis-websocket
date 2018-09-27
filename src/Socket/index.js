@@ -251,7 +251,27 @@ class Socket {
   serverAck ({ id, data }) {
     if (this._acks.has(id)) {
       const ack = this._acks.get(id)
-      ack(data)
+      ack(null, data)
+      this._acks.delete(id)
+    } else {
+      debug('bad ack %s for %s topic', id, this.topic)
+    }
+  }
+
+  /**
+   * A new ack error received
+   *
+   * @method serverAckError
+   *
+   * @param  {Number}      options.id
+   * @param  {String}      options.message
+   *
+   * @return {void}
+   */
+  serverAckError ({ id, message }) {
+    if (this._acks.has(id)) {
+      const ack = this._acks.get(id)
+      ack(new Error(message))
       this._acks.delete(id)
     } else {
       debug('bad ack %s for %s topic', id, this.topic)

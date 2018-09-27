@@ -229,6 +229,14 @@ class Connection extends Emittery {
     }
 
     /**
+     * Ack error packet
+     */
+    if (msp.isAckErrorPacket(packet)) {
+      this._processAckError(packet)
+      return
+    }
+
+    /**
      * Ping from client
      */
     if (msp.isPingPacket(packet)) {
@@ -265,11 +273,14 @@ class Connection extends Emittery {
     const result = this.getSubscription(topic).serverMessage(packet.d)
 
     if (typeof (id) !== 'undefined') {
-      result.then((responses) => {
-        const data = responses.find((response) => typeof (response) !== 'undefined')
-
-        this.sendAckPacket(topic, id, data)
-      })
+      result
+        .then((responses) => {
+          const data = responses.find((response) => typeof (response) !== 'undefined')
+          this.sendAckPacket(topic, id, data)
+        })
+        .catch((error) => {
+          this.sendAckErrorPacket(topic, id, error.message)
+        })
     }
   }
 
@@ -295,6 +306,30 @@ class Connection extends Emittery {
     }
 
     this.getSubscription(packet.d.topic).serverAck(packet.d)
+  }
+
+  /**
+   * Processes the ack error by ensuring the packet is valid and there
+   * is a subscription for the given topic.
+   *
+   * @method _processAckError
+   *
+   * @param  {Object}      packet
+   *
+   * @return {void}
+   */
+  _processAckError (packet) {
+    if (!msp.isValidAckErrorPacket(packet)) {
+      this._notifyPacketDropped('_processAckError', 'dropping ack error since packet is invalid %j', packet)
+      return
+    }
+
+    if (!this.hasSubscription(packet.d.topic)) {
+      this._notifyPacketDropped('_processAckError', 'dropping ack error since there are no subscription %j', packet)
+      return
+    }
+
+    this.getSubscription(packet.d.topic).serverAckError(packet.d)
   }
 
   /**
@@ -661,6 +696,22 @@ class Connection extends Emittery {
    */
   sendAckPacket (topic, id, data) {
     this.sendPacket(msp.ackPacket(topic, id, data))
+  }
+
+  /**
+   * Sends the ack error packet, when the client requested the
+   * response for given event.
+   *
+   * @method sendAckErrorPacket
+   *
+   * @param  {String}  topic
+   * @param  {Number}  id
+   * @param  {String}  message
+   *
+   * @return {void}
+   */
+  sendAckErrorPacket (topic, id, message) {
+    this.sendPacket(msp.ackErrorPacket(topic, id, message))
   }
 
   /**
