@@ -301,10 +301,9 @@ class Channel {
     return {
       socket,
       /**
-       * Broadcast to everyone
+       * Broadcast to everyone (except the caller)
        *
        * @method broadcast
-       * @alias broadcastToAll
        *
        * @param  {String}  event
        * @param  {Mixed}  data
@@ -312,7 +311,7 @@ class Channel {
        * @return {void}
        */
       broadcast (event, data) {
-        this.socket.broadcastToAll(event, data)
+        this.socket.broadcast(event, data)
       },
 
       /**
