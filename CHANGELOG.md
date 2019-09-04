@@ -1,3 +1,12 @@
+## [1.0.12](https://github.com/adonisjs/adonis-websocket/compare/v1.0.11...v1.0.12) (2019-09-04)
+
+
+### Bug Fixes
+
+* mark request getter as singleton ([a8a8ef0](https://github.com/adonisjs/adonis-websocket/commit/a8a8ef0))
+
+
+
 <a name="1.0.11"></a>
 ## [1.0.11](https://github.com/adonisjs/adonis-websocket/compare/v1.0.10...v1.0.11) (2018-07-17)
 
