@@ -73,7 +73,7 @@ class WsProvider extends ServiceProvider {
       const request = new Request(this.req, {}, Config)
       request.websocket = true
       return request
-    })
+    }, true)
   }
 }
 
