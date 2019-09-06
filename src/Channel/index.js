@@ -380,7 +380,7 @@ class Channel {
    * @return {void}
    */
   clusterBroadcast (topic, payload) {
-    this.broadcast(topic, payload, [])
+    this.broadcastPayload(topic, payload, [])
   }
 }
 

@@ -22,7 +22,7 @@ test.group('Cluster Receiver', (group) => {
     clusterReceiver({ name: 'virk' })
 
     inspect.restore()
-    assert.equal(inspect.output[0].trim(), 'adonis:websocket dropping packet, since not valid json')
+    assert.equal(inspect.output[0].trim(), 'adonis:websocket dropping packet, since it is not valid')
   })
 
   test('ignore message when handle is missing', (assert) => {
