@@ -308,11 +308,12 @@ class Channel {
        *
        * @param  {String}  event
        * @param  {Mixed}  data
+       * @param  {Array}  exceptIds
        *
        * @return {void}
        */
-      broadcast (event, data) {
-        this.socket.broadcastToAll(event, data)
+      broadcast (event, data, exceptIds = []) {
+        this.socket.broadcast(event, data, exceptIds)
       },
 
       /**
@@ -358,7 +359,7 @@ class Channel {
    *
    * @return {void}
    */
-  broadcastPayload (topic, payload, filterSockets = [], inverse) {
+  broadcastPayload (topic, payload, filterSockets = [], inverse = false) {
     this.getTopicSubscriptions(topic).forEach((socket) => {
       const socketIndex = filterSockets.indexOf(socket.id)
       const shouldSend = inverse ? socketIndex > -1 : socketIndex === -1
@@ -376,11 +377,12 @@ class Channel {
    *
    * @param  {String}         topic
    * @param  {String}         payload
+   * @param  {Object}         args
    *
    * @return {void}
    */
-  clusterBroadcast (topic, payload) {
-    this.broadcast(topic, payload, [])
+  clusterBroadcast (topic, payload, args = {}) {
+    this.broadcastPayload(topic, payload, args.ids, args.inverse)
   }
 }
 

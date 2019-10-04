@@ -10,9 +10,9 @@
 */
 const debug = require('debug')('adonis:websocket')
 
-module.exports = function (handle, topic, payload) {
+module.exports = function (handle, topic, payload, args = {}) {
   try {
-    process.send(JSON.stringify({ handle, topic, payload }))
+    process.send(JSON.stringify({ handle, topic, payload, args }))
   } catch (error) {
     debug('cluster.send error %o', error)
   }
