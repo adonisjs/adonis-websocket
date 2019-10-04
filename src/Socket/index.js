@@ -26,6 +26,9 @@ const ClusterHop = require('../ClusterHop')
  */
 class Socket {
   constructor (topic, connection) {
+    this._acks = new Map()
+    this._nextAckId = 0
+
     this.channel = null
 
     /**
@@ -109,11 +112,18 @@ class Socket {
    * @param  {String}   event
    * @param  {Object}   data
    * @param  {Function} [ack]
+   * @param  {Function} [responseAck]
    *
    * @return {void}
    */
-  emit (event, data, ack) {
-    this.connection.sendEvent(this.topic, event, data, ack)
+  emit (event, data, ack, responseAck) {
+    let id
+    if (typeof (responseAck) === 'function') {
+      id = this._nextAckId++
+      this._acks.set(id, responseAck)
+    }
+
+    this.connection.sendEvent(this.topic, event, data, ack, id)
   }
 
   /**
@@ -222,10 +232,50 @@ class Socket {
    * @param  {String}      options.event
    * @param  {Mixed}       options.data
    *
-   * @return {void}
+   * @return {Promise}
    */
   serverMessage ({ event, data }) {
-    this.emitter.emit(event, data)
+    return this.emitter.emit(event, data)
+  }
+
+  /**
+   * A new ack received
+   *
+   * @method serverAck
+   *
+   * @param  {Number}      options.id
+   * @param  {Mixed}       options.data
+   *
+   * @return {void}
+   */
+  serverAck ({ id, data }) {
+    if (this._acks.has(id)) {
+      const ack = this._acks.get(id)
+      ack(null, data)
+      this._acks.delete(id)
+    } else {
+      debug('bad ack %s for %s topic', id, this.topic)
+    }
+  }
+
+  /**
+   * A new ack error received
+   *
+   * @method serverAckError
+   *
+   * @param  {Number}      options.id
+   * @param  {String}      options.message
+   *
+   * @return {void}
+   */
+  serverAckError ({ id, message }) {
+    if (this._acks.has(id)) {
+      const ack = this._acks.get(id)
+      ack(new Error(message))
+      this._acks.delete(id)
+    } else {
+      debug('bad ack %s for %s topic', id, this.topic)
+    }
   }
 
   /**
@@ -241,9 +291,11 @@ class Socket {
       .emit('close', this)
       .then(() => {
         this.emitter.clearListeners()
+        this._acks.clear()
       })
       .catch(() => {
         this.emitter.clearListeners()
+        this._acks.clear()
       })
   }
 
