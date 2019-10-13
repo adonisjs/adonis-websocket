@@ -36,7 +36,7 @@ module.exports = {
   |--------------------------------------------------------------------------
   |
   | Server attempts are used with serverInterval to identify dead client
-  | connections. A total of `serverAttempts` attmepts after `serverInterval`
+  | connections. A total of `serverAttempts` attempts after `serverInterval`
   | will be made before terminating the client connection.
   |
   */
