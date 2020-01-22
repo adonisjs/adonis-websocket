@@ -580,16 +580,16 @@ test.group('Connection', (group) => {
     helpers.startClient()
   })
 
-  test('return hard error when topic has no active subscriptions on a connection', (assert, done) => {
+  test('does not return hard error when topic has no active subscriptions on a connection', (assert, done) => {
     assert.plan(1)
 
     this.ws = helpers.startWsServer()
 
     this.ws.on('connection', (ws, req) => {
       const connection = new Connection(ws, req, JsonEncoder)
-      const fn = () => connection.sendEvent('chat')
+      const fn = () => connection.sendEvent('chat', 'message')
       done(() => {
-        assert.throw(fn, 'Topic chat doesn\'t have any active subscriptions')
+        assert.doesNotThrow(fn)
       })
     })
 
