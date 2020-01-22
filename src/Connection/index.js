@@ -623,7 +623,7 @@ class Connection extends Emittery {
     }
 
     if (!this.hasSubscription(topic)) {
-      throw new Error(`Topic ${topic} doesn't have any active subscriptions`)
+      debug('Topic %s doesn\'t have any active subscriptions', topic)
     }
 
     return msp.eventPacket(topic, event, data)
